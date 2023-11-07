@@ -1,0 +1,36 @@
+定义接口 
+type id [<T [= SomeT]>] { ( id [?] [ : type ] ) * }
+
+定义全局变量
+[var|uniform] id : type [ = expr ]
+
+定义函数
+fn id \( ( id [ : type ] ,) * \) [-> type] expr
+
+类型
+id [ < (type ,)* > ]
+\( (type ,)+ \)
+
+表达式
+;               // 返回void
+{  expr *  }    // 返回最后一个expr的值
+(expr ,)*       // 返回元组
+\[ (expr ,)* \] // 返回数组
+number          // 数值常量
+id
+\( expr \)
+(!|~|++|--|+|-) expr                    // 前缀语法糖
+expr (+|-|*|/|==|<|>|<=|>=|!=) expr     // 中缀语法糖
+expr (& | ^) expr
+expr (&& ||) expr
+expr (+= -= *= /= ^= |= &=) expr
+expr [ : type ] = expr
+expr (++|--)                            // 后缀语法糖
+expr \[ [expr] \]
+id \( expr \)
+expr [ : type ] = expr
+if \( expr \) expr [else expr]          // 返回选择结果，空为void，二者类型需一致
+for \( expr ; expr ; expr \) expr       // 返回void
+while \( expr \) expr                   // 返回void
+do expr while \( expr \)                // 返回void
+break | continue                        // 返回void

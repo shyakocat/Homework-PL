@@ -1,0 +1,65 @@
+SPV {
+
+Program
+    = (TypeDefine | VarDefine | Function)*
+
+TypeDefine
+    = "type" Type "=" "(" Parameters ")" ";" 
+
+Type
+    = name
+
+Parameter
+    = name ":" Type
+
+Parameters
+    = ListOf<Parameter, ",">
+
+VarDefine
+    =  ("var"|"let"|"uniform") name ":" Type ";"
+
+Function
+    = "fn" name "(" Parameters ")" ("->" Type)? Expression
+
+number
+    = digit+                                -- decNumber
+    | digit* "." digit*                     -- floatNumber
+    | digit+ ("." digit)? ("e"|"E") digit+  -- floatSciNumber
+    | "0x" hexDigit+                        -- hexNumber
+    | "0o" ("0".."7")+                      -- octNumber
+    | "0b" ("0".."1")+                      -- binNumber
+    | ("+"|"-") number                      -- signNumber
+
+name
+    = (letter | "_") (alnum | "_")*
+
+Expression
+    = ("!"|"~"|"+"|"-"|"++"|"--") Expression                                -- unaryOp1
+    | Expression ("*"|"/") Expression                                       -- binaryOp1
+    | Expression ("+"|"-") Expression                                       -- binaryOp2
+    | Expression ("&"|"|"|"^") Expression                                   -- binaryOp3
+    | Expression ("=="|"!="|"<="|">="|"<"|">") Expression                   -- binaryOp4
+    | Expression ("&&"|"||") Expression                                     -- binaryOp5
+    | Expression "?" Expression ":" Expression                              -- ternaryOp1
+    | Expression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") Expression        -- assign
+    | name ":" Type "=" Expression                                          -- assignHint
+    | Expression "[" Expression "]"                                         -- getAddress
+    | Expression "(" ListOf<Expression, ","> ")"                            -- callFunc
+    | Expression "." name                                                   -- getMember
+    | "if" "(" Expression ")" Expression ("else" Expression)?               -- ifState
+    | "for" "(" Expression ";" Expression ";" Expression ")" Expression     -- forState
+    | "while" "(" Expression ")" Expression                                 -- whileState
+    | "do" Expression "while" "(" Expression ")"                            -- doWhileState
+    | "break"                                                               -- breakState
+    | "continue"                                                            -- continueState
+    | "return"                                                              -- returnState
+    | ";"                                                                   -- semiclon
+    | "{" Expression* "}"                                                   -- multiExpr
+    | "(" ListOf<Expression, ","> ")"                                       -- tupleState
+    | "[" ListOf<Expression, ","> "]"                                       -- arrayState
+    | name                                                                  -- variableLiteral
+    | number                                                                -- numberLiteral
+
+
+
+}
