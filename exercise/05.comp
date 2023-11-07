@@ -1,0 +1,10 @@
+#version 450
+
+layout(location = 4) in float fancy_attribute;
+layout(location = 2) out float useful_output;
+
+void main()
+{
+    useful_output = fancy_attribute;
+}
+

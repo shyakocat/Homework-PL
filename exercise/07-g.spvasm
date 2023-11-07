@@ -1,0 +1,47 @@
+; SPIR-V
+; Version: 1.0
+; Generator: Google Shaderc over Glslang; 11
+; Bound: 18
+; Schema: 0
+               OpCapability Shader
+          %1 = OpExtInstImport "GLSL.std.450"
+               OpMemoryModel Logical GLSL450
+               OpEntryPoint Vertex %main "main" %useful_output %fancy_attribute %crucial_data
+               OpSource GLSL 450
+               OpSourceExtension "GL_GOOGLE_cpp_style_line_directive"
+               OpSourceExtension "GL_GOOGLE_include_directive"
+               OpName %main "main"
+               OpName %useful_output "useful_output"
+               OpName %fancy_attribute "fancy_attribute"
+               OpName %object_properties "object_properties"
+               OpMemberName %object_properties 0 "shininess"
+               OpMemberName %object_properties 1 "smoothness"
+               OpName %props "props"
+               OpName %crucial_data "crucial_data"
+               OpDecorate %useful_output Location 0
+               OpDecorate %fancy_attribute Location 0
+               OpMemberDecorate %object_properties 0 Offset 0
+               OpMemberDecorate %object_properties 1 Offset 16
+               OpDecorate %object_properties Block
+               OpDecorate %props DescriptorSet 2
+               OpDecorate %props Binding 3
+               OpDecorate %crucial_data Location 1
+       %void = OpTypeVoid
+          %3 = OpTypeFunction %void
+      %float = OpTypeFloat 32
+%_ptr_Output_float = OpTypePointer Output %float
+%useful_output = OpVariable %_ptr_Output_float Output
+%_ptr_Input_float = OpTypePointer Input %float
+%fancy_attribute = OpVariable %_ptr_Input_float Input
+    %v4float = OpTypeVector %float 4
+%object_properties = OpTypeStruct %v4float %v4float
+%_ptr_Uniform_object_properties = OpTypePointer Uniform %object_properties
+      %props = OpVariable %_ptr_Uniform_object_properties Uniform
+%_ptr_Output_v4float = OpTypePointer Output %v4float
+%crucial_data = OpVariable %_ptr_Output_v4float Output
+       %main = OpFunction %void None %3
+          %5 = OpLabel
+         %11 = OpLoad %float %fancy_attribute
+               OpStore %useful_output %11
+               OpReturn
+               OpFunctionEnd
