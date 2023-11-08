@@ -16,7 +16,7 @@ Parameters
     = ListOf<Parameter, ",">
 
 VarDefine
-    =  ("var"|"let"|"uniform") name ":" Type ";"
+    =  ("var"|"let"|"in"|"out"|"uniform") name ":" Type ";"
 
 Function
     = "fn" name "(" Parameters ")" ("->" Type)? Expression

@@ -1,0 +1,9 @@
+#version 450
+
+float _4;
+
+void main()
+{
+    _4 = 100000.0;
+}
+

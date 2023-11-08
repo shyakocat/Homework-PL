@@ -1,0 +1,23 @@
+                        OpCapability Shader
+                        OpMemoryModel Logical GLSL450
+                        OpEntryPoint Vertex %6 "main"
+                        OpName %t_Info "Info"
+                %t_void =       OpTypeVoid
+                        OpName %2 "params"
+                        OpName %4 "pic"
+                        OpMemberName %t_Info 0 "image_size"
+                %t_Info =       OpTypeStruct %t_ivec2
+                %1 =    OpTypePointer Uniform %t_Info
+                %2 =    OpVariable %1 Uniform
+                %3 =    OpTypePointer Private %t_tex2d
+                %4 =    OpVariable %3 Private
+                %5 =    OpTypeFunction %t_void
+                %6 =    OpFunction %t_void None %5
+                %7 =    OpLabel
+                        OpReturn
+                        OpFunctionEnd
+                %8 =    OpTypeFunction %t_void
+                %9 =    OpFunction %t_void None %8
+                %10 =   OpLabel
+                        OpReturn
+                        OpFunctionEnd

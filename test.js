@@ -1,4 +1,4 @@
-let { Parse } = require("./spv");
+let { Parse, Formatter } = require("./spv");
 
 s = `
 type Info = (image_size : ivec2);
@@ -25,4 +25,20 @@ fn main(gid : uvec3, lid: uvec3) {
 fn add(a : int, b : int) a+b
 `;
 
-Parse(s);
+// s = `
+
+// type Complex = (real : float, imag: float);
+
+// out c : Complex;
+
+// fn main() -> void {
+
+// }
+
+// `;
+
+ret = Parse(s);
+//console.log(ret);
+console.log(Formatter(ret))
+
+
