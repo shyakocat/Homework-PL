@@ -1,23 +1,27 @@
-                        OpCapability Shader
-                        OpMemoryModel Logical GLSL450
-                        OpEntryPoint Vertex %6 "main"
-                        OpName %t_Info "Info"
-                %t_void =       OpTypeVoid
-                        OpName %2 "params"
-                        OpName %4 "pic"
-                        OpMemberName %t_Info 0 "image_size"
-                %t_Info =       OpTypeStruct %t_ivec2
-                %1 =    OpTypePointer Uniform %t_Info
-                %2 =    OpVariable %1 Uniform
-                %3 =    OpTypePointer Private %t_tex2d
-                %4 =    OpVariable %3 Private
-                %5 =    OpTypeFunction %t_void
-                %6 =    OpFunction %t_void None %5
-                %7 =    OpLabel
-                        OpReturn
-                        OpFunctionEnd
-                %8 =    OpTypeFunction %t_void
-                %9 =    OpFunction %t_void None %8
-                %10 =   OpLabel
-                        OpReturn
-                        OpFunctionEnd
+			OpCapability Shader
+			OpMemoryModel Logical GLSL450
+			OpEntryPoint Vertex %f_main "main" 
+		%t_float = 	OpTypeFloat 32
+		%t_void = 	OpTypeVoid
+			OpName %2 "a"
+			OpName %4 "b"
+			OpName %f_main "main"
+		%1 = 	OpTypePointer Input %t_float
+		%2 = 	OpVariable %1 Input
+		%3 = 	OpTypePointer Output %t_float
+		%4 = 	OpVariable %3 Output
+		%5 = 	OpTypeFunction %t_void 
+		%f_main = 	OpFunction %t_void None %5
+		%6 = 	OpLabel
+		%7 = 	OpLoad %t_float %4
+		%8 = 	OpLoad %t_float %2
+		%9 = 	OpConstant %t_float 4
+		%10 = 	OpLoad %t_float %2
+		%11 = 	OpLoad %t_float %2
+		%12 = 	OpFDiv %t_float %10 %11
+		%13 = 	OpFAdd %t_float %9 %12
+		%14 = 	OpFMul %t_float %8 %13
+		%15 = 	OpFNegate %t_float %14
+			OpStore %4 %15
+			OpReturn
+			OpFunctionEnd

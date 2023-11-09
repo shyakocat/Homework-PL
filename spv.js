@@ -43,11 +43,12 @@ function State() {
     if (!vname) throw `variable ${v} not found`;
     return vname;
   };
-  this.setVar = (v, dc) => {
+  this.setVar = (v, dc, tp) => {
     let cur = this.getNext();
     this.vtable[v] = {
       id: cur,
       decorator: dc,
+      type: tp,
     };
     return cur;
   };
@@ -74,9 +75,11 @@ let actions = {
         .filter((x) => x.decorator === "in" || x.decorator === "out")
         .map((x) => x.id)}`
     );
-    for (let x in st.ttable) pre.push(`OpName ${st.getType(x)} "${x}"`)
+    for (let x in st.ttable) pre.push(`OpName ${st.getType(x)} "${x}"`);
     for (let x of Object.values(st.ctable)) pre.push(x);
-    for (let x in st.vtable) pre.push(`OpName ${st.getVar(x).id} "${x}"`)
+    for (let x in st.vtable) pre.push(`OpName ${st.getVar(x).id} "${x}"`);
+    for (let x of Object.entries(st.ftable))
+      pre.push(`OpName ${x[1].f_id} "${x[0]}"`);
     return [...code, ...pre, ...body];
   },
   TypeDefine(_t, type, _e, _l, params, _r, _s) {
@@ -107,10 +110,11 @@ let actions = {
   },
   VarDefine(decorator, name, _c, type, _s) {
     let dc = DecoratorDict[decorator.sourceString];
+    let tp = type.parse();
     let ptr = st.getNext();
-    let cur = st.setVar(name.parse());
+    let cur = st.setVar(name.parse(), dc, tp);
     let code = [
-      `${ptr} = OpTypePointer ${dc} ${st.getType(type.parse())}`,
+      `${ptr} = OpTypePointer ${dc} ${st.getType(tp)}`,
       `${cur} = OpVariable ${ptr} ${dc}`,
     ];
     return code;
@@ -119,21 +123,25 @@ let actions = {
   Function(_f, name, _l, params, _r, _a, type, expr) {
     let fn = name.parse();
     let ps = params.parse();
-    let tp = type.numChildren === 0 ? "void" : type.children[0].children[0].parse()
+    let tp =
+      type.numChildren === 0 ? "void" : type.children[0].children[0].parse();
     let ftp = st.getNext();
-    let fid = st.getNext();
+    let fid = `%f_${fn}`;
     st.ftable[fn] = {
       params: ps,
       return_type: tp,
       f_id: fid,
     };
     let code = [
-      `${ftp} = OpTypeFunction ${st.getType(tp)}`,
+      `${ftp} = OpTypeFunction ${st.getType(tp)} ${ps
+        .map((p) => st.getType(p[1]))
+        .join(" ")}`,
       `${fid} = OpFunction ${st.getType(tp)} None ${ftp}`,
       `${st.getNext()} = OpLabel`,
     ];
     st.pushScope();
-    code.push(...expr.parse());
+    expr_v = expr.parse();
+    code.push(...expr_v.code);
     st.popScope();
     code.push(...["OpReturn", "OpFunctionEnd"]);
     return code;
@@ -145,7 +153,119 @@ let actions = {
     return this.sourceString;
   },
   Expression(expr) {
-    return [];
+    return expr.parse();
+  },
+  Expression_unaryOp1(op, expr) {
+    let expr_v = expr.parse();
+    switch (op.sourceString) {
+      case "+":
+        break;
+      case "-":
+        let cur = st.getNext();
+        expr_v.code.push(`${cur} = OpFNegate ${expr_v.type} ${expr_v.value}`);
+        expr_v.value = cur;
+        break;
+      default:
+    }
+    return expr_v;
+  },
+  Expression_binaryOp1(expr1, op, expr2) {
+    let e1 = expr1.parse();
+    let e2 = expr2.parse();
+    let cur = st.getNext();
+    let expr_v = {
+      code: [...e1.code, ...e2.code],
+      value: cur,
+      type: e1.type,
+      isFloat: true,
+    };
+    let instr =
+      op.sourceString === "*"
+        ? "OpFMul"
+        : op.sourceString === "/"
+        ? "OpFDiv"
+        : op.sourceString === "%"
+        ? "OpFMod"
+        : null;
+    console.assert(instr !== null);
+    expr_v.code.push(
+      `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
+    );
+    return expr_v;
+  },
+  Expression_binaryOp2(expr1, op, expr2) {
+    let e1 = expr1.parse();
+    let e2 = expr2.parse();
+    let cur = st.getNext();
+    let expr_v = {
+      code: [...e1.code, ...e2.code],
+      value: cur,
+      type: e1.type,
+    };
+    let instr =
+      op.sourceString === "+"
+        ? "OpFAdd"
+        : op.sourceString === "-"
+        ? "OpFSub"
+        : null;
+    console.assert(instr !== null);
+    expr_v.code.push(
+      `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
+    );
+    return expr_v;
+  },
+  Expression_assign(expr1, op, expr2) {
+    let e1 = expr1.parse();
+    let e2 = expr2.parse();
+    let expr_v = {
+      code: [...e1.code, ...e2.code],
+      value: e2.value,
+      type: e1.type,
+    };
+    if (op.sourceString === "=") {
+      // expr1中得是左值
+      expr_v.code.push(...[`OpStore ${e1.lvalue} ${e2.value}`]);
+    } else {
+      throw "not implement";
+    }
+    return expr_v;
+  },
+  Expression_variableLiteral(name) {
+    let cur = st.getNext();
+    let v = st.getVar(name.sourceString);
+    let expr_v = {
+      code: [`${cur} = OpLoad ${st.getType(v.type)} ${v.id}`],
+      value: cur,
+      type: st.getType(v.type),
+      lvalue:  v.id,
+      isFloat: true, // 为了简化，我们只有浮点类型
+    };
+    return expr_v;
+  },
+  Expression_numberLiteral(num) {
+    let cur = st.getNext();
+    let tp = st.getType("float");
+    let expr_v = {
+      code: [`${cur} = OpConstant ${tp} ${num.sourceString}`],
+      value: cur,
+      type: tp,
+    };
+    return expr_v;
+  },
+  Expression_tupleState(_l, xs, _r) {
+    let es = xs.asIteration().children.map((x) => x.parse());
+    return es[0];
+  },
+  Expression_multiExpr(_l, xs, _r) {
+    let es = xs.children.map((x) => x.parse());
+    return es[0];
+  },
+  Expression_semiclon(_) {
+    return {
+      code: [],
+      value: "",
+      type: st.getType("void"),
+    };
   },
 };
 

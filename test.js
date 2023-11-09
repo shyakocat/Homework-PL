@@ -1,4 +1,5 @@
 let { Parse, Formatter } = require("./spv");
+const fs = require("fs");
 
 s = `
 type Info = (image_size : ivec2);
@@ -25,20 +26,22 @@ fn main(gid : uvec3, lid: uvec3) {
 fn add(a : int, b : int) a+b
 `;
 
-// s = `
+s = `
 
-// type Complex = (real : float, imag: float);
+in a : float;
+out b : float;
 
-// out c : Complex;
+fn main() -> void {
+  b = -a * 4 + a / a;
+}
 
-// fn main() -> void {
-
-// }
-
-// `;
+`;
 
 ret = Parse(s);
 //console.log(ret);
-console.log(Formatter(ret))
-
-
+ret = Formatter(ret);
+console.log(ret);
+if (process.argv.length > 2) {
+  file = process.argv[2];
+  fs.writeFileSync(file, ret);
+}

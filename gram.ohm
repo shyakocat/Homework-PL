@@ -34,15 +34,15 @@ name
     = (letter | "_") (alnum | "_")*
 
 Expression
-    = ("!"|"~"|"+"|"-"|"++"|"--") Expression                                -- unaryOp1
-    | Expression ("*"|"/") Expression                                       -- binaryOp1
-    | Expression ("+"|"-") Expression                                       -- binaryOp2
-    | Expression ("&"|"|"|"^") Expression                                   -- binaryOp3
-    | Expression ("=="|"!="|"<="|">="|"<"|">") Expression                   -- binaryOp4
-    | Expression ("&&"|"||") Expression                                     -- binaryOp5
-    | Expression "?" Expression ":" Expression                              -- ternaryOp1
-    | Expression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") Expression        -- assign
+    = Expression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") Expression        -- assign
     | name ":" Type "=" Expression                                          -- assignHint
+    | Expression "?" Expression ":" Expression                              -- ternaryOp1
+    | Expression ("&&"|"||") Expression                                     -- binaryOp5
+    | Expression ("=="|"!="|"<="|">="|"<"|">") Expression                   -- binaryOp4
+    | Expression ("&"|"|"|"^") Expression                                   -- binaryOp3
+    | Expression ("+"|"-") Expression                                       -- binaryOp2
+    | Expression ("*"|"/"|"%") Expression                                   -- binaryOp1
+    | ("!"|"~"|"+"|"-"|"++"|"--") Expression                                -- unaryOp1
     | Expression "[" Expression "]"                                         -- getAddress
     | Expression "(" ListOf<Expression, ","> ")"                            -- callFunc
     | Expression "." name                                                   -- getMember
@@ -61,5 +61,12 @@ Expression
     | number                                                                -- numberLiteral
 
 
+space
+    += comment
+
+    
+comment
+    = "//" (~"\n" any)* &("\n" | end)  -- singleLine
+    | "/*" (~"*/" any)* "*/"  -- multiLine
 
 }

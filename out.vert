@@ -1,14 +1,10 @@
 #version 450
 
-struct Complex
-{
-    float real;
-    float imag;
-};
-
-out Complex c;
+in float a;
+out float b;
 
 void main()
 {
+    b = -(a * (4.0 + (a / a)));
 }
 
