@@ -6,6 +6,7 @@ var TypeDict = {
   uint: "OpTypeInt 32 0",
   float: "OpTypeFloat 32",
   void: "OpTypeVoid",
+  bool: "OpTypeBool",
 };
 
 var DecoratorDict = {
@@ -152,10 +153,192 @@ let actions = {
   name(_1, _2) {
     return this.sourceString;
   },
-  Expression(expr) {
-    return expr.parse();
+
+  Statement(e) {
+    return e.parse();
   },
-  Expression_unaryOp1(op, expr) {
+  PrimaryExpression(e) {
+    return e.parse();
+  },
+  Expression(e) {
+    e = e.parse();
+    return e;
+  },
+  Expression_derive(e) {
+    return e.parse();
+  },
+  PropertyExpression(e) {
+    return e.parse();
+  },
+  PropertyExpression_derive(e) {
+    return e.parse();
+  },
+  UnaryExpression(e) {
+    return e.parse();
+  },
+  UnaryExpression_derive(e) {
+    return e.parse();
+  },
+  MultiplicativeBinaryExpression(e) {
+    return e.parse();
+  },
+  MultiplicativeBinaryExpression_derive(e) {
+    return e.parse();
+  },
+  AdditiveBinaryExpression(e) {
+    return e.parse();
+  },
+  AdditiveBinaryExpression_derive(e) {
+    return e.parse();
+  },
+  BitBinaryExpression(e) {
+    return e.parse();
+  },
+  BitBinaryExpression_derive(e) {
+    return e.parse();
+  },
+  CompareBinaryExpression(e) {
+    return e.parse();
+  },
+  CompareBinaryExpression_derive(e) {
+    return e.parse();
+  },
+  LogicBinaryExpression(e) {
+    return e.parse();
+  },
+  LogicBinaryExpression_derive(e) {
+    return e.parse();
+  },
+  TernaryExpression(e) {
+    return e.parse();
+  },
+  TernaryExpression_derive(e) {
+    return e.parse();
+  },
+  AssignExpression(e) {
+    return e.parse();
+  },
+  AssignExpression_derive(e) {
+    return e.parse();
+  },
+
+  Statement_semiclon(_) {
+    return {
+      code: [],
+      value: "",
+      type: st.getType("void"),
+    };
+  },
+  Statement_ifState(_if, _l, cond, _r, expr1, _else, expr2) {
+    let c = cond.parse();
+    console.assert(
+      c.typeName === "bool",
+      `condition should be bool but got ${c.typeName}`
+    );
+    let expr_v = {
+      code: c.code,
+    };
+    let e1 = expr1.parse();
+    let branch1 = st.getNext();
+    let branchEnd = st.getNext();
+    if (_else.numChildren === 0) {
+      // 无else，返回void
+      expr_v.type = st.getType("void");
+      expr_v.typeName = "void";
+      expr_v.value = st.getType("void");
+      expr_v.code.push(
+        `OpSelectionMerge ${branchEnd} None`,
+        `OpBranchConditional ${c.value} ${branch1} ${branchEnd}`,
+        `${branch1} = OpLabel`,
+        ...e1.code,
+        `OpBranch ${branchEnd}`,
+        `${branchEnd} = OpLabel`
+      );
+    } else {
+      // 有else分支，若类型一致返回该类型，否则返回void
+      let e2 = expr2.child(0)?.parse();
+      let branch2 = st.getNext();
+      if (e1.typeName === e2.typeName) {
+        let cur = st.getNext();
+        expr_v.typeName = e1.typeName;
+        expr_v.type = e1.type;
+        expr_v.value = cur;
+        expr_v.code.push(
+          `OpSelectionMerge ${branchEnd} None`,
+          `OpBranchConditional ${c.value} ${branch1} ${branch2}`,
+          `${branch1} = OpLabel`,
+          ...e1.code,
+          `OpBranch ${branchEnd}`,
+          `${branch2} = OpLabel`,
+          ...e2.code,
+          `OpBranch ${branchEnd}`,
+          `${branchEnd} = OpLabel`,
+          `${cur} = OpPhi ${expr_v.type} ${e1.value} ${branch1} ${e2.value} ${branch2}`
+        );
+      } else {
+        expr_v.type = st.getType("void");
+        expr_v.typeName = "void";
+        expr_v.value = st.getType("void");
+        expr_v.code.push(
+          `OpSelectionMerge ${branchEnd} None`,
+          `OpBranchConditional ${c.value} ${branch1} ${branch2}`,
+          `${branch1} = OpLabel`,
+          ...e1.code,
+          `OpBranch ${branchEnd}`,
+          `${branch2} = OpLabel`,
+          ...e2.code,
+          `OpBranch ${branchEnd}`,
+          `${branchEnd} = OpLabel`
+        );
+      }
+    }
+    return expr_v;
+  },
+
+  PrimaryExpression_variableLiteral(name) {
+    let cur = st.getNext();
+    let v = st.getVar(name.sourceString);
+    let expr_v = {
+      code: [`${cur} = OpLoad ${st.getType(v.type)} ${v.id}`],
+      value: cur,
+      type: st.getType(v.type),
+      typeName: v.type,
+      lvalue: v.id,
+      isFloat: true, // 为了简化，我们只有浮点类型
+    };
+    return expr_v;
+  },
+  PrimaryExpression_numberLiteral(num) {
+    let cur = st.getNext();
+    let tp = st.getType("float");
+    let expr_v = {
+      code: [`${cur} = OpConstant ${tp} ${num.sourceString}`],
+      value: cur,
+      type: tp,
+      typeName: "float",
+    };
+    return expr_v;
+  },
+  PrimaryExpression_tupleState(_l, xs, _r) {
+    let es = xs.asIteration().children.map((x) => x.parse());
+    return es[es.length - 1];
+  },
+  PrimaryExpression_multiExpr(_l, xs, _r) {
+    let es = xs.children.map((x) => x.parse());
+    let code = [];
+    for (let e of es) code.push(...e.code);
+    return {
+      code: code,
+      value: es[es.length - 1].value,
+      type: es[es.length - 1].type,
+      typeName: es[es.length - 1].typeName,
+    };
+  },
+  PrimaryExpression_statement(s) {
+    return s.parse();
+  },
+
+  UnaryExpression_compose(op, expr) {
     let expr_v = expr.parse();
     switch (op.sourceString) {
       case "+":
@@ -169,7 +352,7 @@ let actions = {
     }
     return expr_v;
   },
-  Expression_binaryOp1(expr1, op, expr2) {
+  MultiplicativeBinaryExpression_compose(expr1, op, expr2) {
     let e1 = expr1.parse();
     let e2 = expr2.parse();
     let cur = st.getNext();
@@ -177,23 +360,25 @@ let actions = {
       code: [...e1.code, ...e2.code],
       value: cur,
       type: e1.type,
+      typeName: e1.typeName,
       isFloat: true,
     };
+    op = op.sourceString;
     let instr =
-      op.sourceString === "*"
+      op === "*"
         ? "OpFMul"
-        : op.sourceString === "/"
+        : op === "/"
         ? "OpFDiv"
-        : op.sourceString === "%"
+        : op === "%"
         ? "OpFMod"
         : null;
-    console.assert(instr !== null);
+    console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
     );
     return expr_v;
   },
-  Expression_binaryOp2(expr1, op, expr2) {
+  AdditiveBinaryExpression_compose(expr1, op, expr2) {
     let e1 = expr1.parse();
     let e2 = expr2.parse();
     let cur = st.getNext();
@@ -201,71 +386,65 @@ let actions = {
       code: [...e1.code, ...e2.code],
       value: cur,
       type: e1.type,
+      typeName: e1.typeName,
     };
-    let instr =
-      op.sourceString === "+"
-        ? "OpFAdd"
-        : op.sourceString === "-"
-        ? "OpFSub"
-        : null;
-    console.assert(instr !== null);
+    op = op.sourceString;
+    let instr = op === "+" ? "OpFAdd" : op === "-" ? "OpFSub" : null;
+    console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
     );
     return expr_v;
   },
-  Expression_assign(expr1, op, expr2) {
+  CompareBinaryExpression_compose(expr1, op, expr2) {
+    let e1 = expr1.parse();
+    let e2 = expr2.parse();
+    let cur = st.getNext();
+    let expr_v = {
+      code: [...e1.code, ...e2.code],
+      value: cur,
+      type: st.getType("bool"),
+      typeName: "bool",
+    };
+    op = op.sourceString;
+    let instr =
+      op === "=="
+        ? "OpFOrdEqual"
+        : op === "!="
+        ? "OpFOrdNotEqual"
+        : op === "<"
+        ? "OpFOrdLessThan"
+        : op === ">"
+        ? "OpFOrdGreaterThan"
+        : op === "<="
+        ? "OpFOrdLessThanEqual"
+        : op === ">="
+        ? "OpFOrdGreaterThanEqual"
+        : null;
+    console.assert(instr !== null, `unknown op ${op}`);
+    expr_v.code.push(
+      `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
+    );
+    return expr_v;
+  },
+
+  AssignExpression_assign(expr1, op, expr2) {
     let e1 = expr1.parse();
     let e2 = expr2.parse();
     let expr_v = {
       code: [...e1.code, ...e2.code],
       value: e2.value,
       type: e1.type,
+      typeName: e1.typeName,
     };
     if (op.sourceString === "=") {
       // expr1中得是左值
+      console.assert(e1.lvalue, `"${expr1.sourceString}" not a l-value`);
       expr_v.code.push(...[`OpStore ${e1.lvalue} ${e2.value}`]);
     } else {
       throw "not implement";
     }
     return expr_v;
-  },
-  Expression_variableLiteral(name) {
-    let cur = st.getNext();
-    let v = st.getVar(name.sourceString);
-    let expr_v = {
-      code: [`${cur} = OpLoad ${st.getType(v.type)} ${v.id}`],
-      value: cur,
-      type: st.getType(v.type),
-      lvalue:  v.id,
-      isFloat: true, // 为了简化，我们只有浮点类型
-    };
-    return expr_v;
-  },
-  Expression_numberLiteral(num) {
-    let cur = st.getNext();
-    let tp = st.getType("float");
-    let expr_v = {
-      code: [`${cur} = OpConstant ${tp} ${num.sourceString}`],
-      value: cur,
-      type: tp,
-    };
-    return expr_v;
-  },
-  Expression_tupleState(_l, xs, _r) {
-    let es = xs.asIteration().children.map((x) => x.parse());
-    return es[0];
-  },
-  Expression_multiExpr(_l, xs, _r) {
-    let es = xs.children.map((x) => x.parse());
-    return es[0];
-  },
-  Expression_semiclon(_) {
-    return {
-      code: [],
-      value: "",
-      type: st.getType("void"),
-    };
   },
 };
 

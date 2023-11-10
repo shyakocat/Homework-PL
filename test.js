@@ -32,16 +32,18 @@ in a : float;
 out b : float;
 
 fn main() -> void {
-  b = -a * 4 + a / a;
+  b = if (a < 0) -1.0 else 1.0
 }
 
 `;
 
+
 ret = Parse(s);
 //console.log(ret);
 ret = Formatter(ret);
-console.log(ret);
 if (process.argv.length > 2) {
   file = process.argv[2];
   fs.writeFileSync(file, ret);
+} else {
+  console.log(ret);
 }

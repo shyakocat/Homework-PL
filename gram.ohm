@@ -19,47 +19,89 @@ VarDefine
     =  ("var"|"let"|"in"|"out"|"uniform") name ":" Type ";"
 
 Function
-    = "fn" name "(" Parameters ")" ("->" Type)? Expression
+    = ("fn"|"function") name "(" Parameters ")" ("->" Type)? Expression
 
 number
-    = digit+                                -- decNumber
-    | digit* "." digit*                     -- floatNumber
-    | digit+ ("." digit)? ("e"|"E") digit+  -- floatSciNumber
-    | "0x" hexDigit+                        -- hexNumber
-    | "0o" ("0".."7")+                      -- octNumber
-    | "0b" ("0".."1")+                      -- binNumber
-    | ("+"|"-") number                      -- signNumber
+    = digit+ (~("."|digit))                    -- decNumber
+    | digit* "." digit* (~digit)               -- floatNumber
+    | digit+ ("." digit*)? ("e"|"E") digit+    -- floatSciNumber
+    | "0x" hexDigit+ (~hexDigit)               -- hexNumber
+    | "0o" ("0".."7")+                         -- octNumber
+    | "0b" ("0".."1")+                         -- binNumber
+    | ("+"|"-") number                         -- signNumber
+
+keyword
+    = "if"
+    | "else"
+    | "for"
+    | "while"
+    | "do"
+    | "break"
+    | "continue"
+    | "return"
 
 name
-    = (letter | "_") (alnum | "_")*
+    = ~keyword (letter | "_") (alnum | "_")*
 
 Expression
-    = Expression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") Expression        -- assign
-    | name ":" Type "=" Expression                                          -- assignHint
-    | Expression "?" Expression ":" Expression                              -- ternaryOp1
-    | Expression ("&&"|"||") Expression                                     -- binaryOp5
-    | Expression ("=="|"!="|"<="|">="|"<"|">") Expression                   -- binaryOp4
-    | Expression ("&"|"|"|"^") Expression                                   -- binaryOp3
-    | Expression ("+"|"-") Expression                                       -- binaryOp2
-    | Expression ("*"|"/"|"%") Expression                                   -- binaryOp1
-    | ("!"|"~"|"+"|"-"|"++"|"--") Expression                                -- unaryOp1
-    | Expression "[" Expression "]"                                         -- getAddress
-    | Expression "(" ListOf<Expression, ","> ")"                            -- callFunc
-    | Expression "." name                                                   -- getMember
-    | "if" "(" Expression ")" Expression ("else" Expression)?               -- ifState
+    = AssignExpression                                                      -- derive
+
+Statement
+    = "if" "(" Expression ")" Expression ("else" Expression)?               -- ifState
     | "for" "(" Expression ";" Expression ";" Expression ")" Expression     -- forState
     | "while" "(" Expression ")" Expression                                 -- whileState
-    | "do" Expression "while" "(" Expression ")"                            -- doWhileState
+    | "do" Expression "while" "(" Expression ")"                            -- composeWhileState
     | "break"                                                               -- breakState
     | "continue"                                                            -- continueState
-    | "return"                                                              -- returnState
+    | "return" Expression                                                   -- returnState
     | ";"                                                                   -- semiclon
+
+PrimaryExpression
+    = name                                                                  -- variableLiteral
+    | number                                                                -- numberLiteral
     | "{" Expression* "}"                                                   -- multiExpr
     | "(" ListOf<Expression, ","> ")"                                       -- tupleState
     | "[" ListOf<Expression, ","> "]"                                       -- arrayState
-    | name                                                                  -- variableLiteral
-    | number                                                                -- numberLiteral
+    | Statement                                                             -- statement
 
+PropertyExpression
+    = PrimaryExpression "[" Expression "]"                                  -- getAddress
+    | PrimaryExpression "(" ListOf<Expression, ","> ")"                     -- callFunc
+    | PrimaryExpression "." name                                            -- getMember
+    | PrimaryExpression                                                     -- derive
+    
+UnaryExpression
+    = ("!"|"~"|"+"|"-"|"++"|"--") PropertyExpression                                      -- compose
+    | PropertyExpression                                                                  -- derive 
+
+MultiplicativeBinaryExpression
+    = UnaryExpression ("*"|"/"|"%") UnaryExpression                                       -- compose
+    | UnaryExpression                                                                     -- derive
+
+AdditiveBinaryExpression
+    = MultiplicativeBinaryExpression ("+"|"-") MultiplicativeBinaryExpression             -- compose
+    | MultiplicativeBinaryExpression                                                      -- derive
+
+BitBinaryExpression
+    = AdditiveBinaryExpression ("&"|"|"|"^") AdditiveBinaryExpression                     -- compose
+    | AdditiveBinaryExpression                                                            -- derive
+
+CompareBinaryExpression
+    = BitBinaryExpression ("=="|"!="|"<="|">="|"<"|">") BitBinaryExpression               -- compose
+    | BitBinaryExpression                                                                 -- derive
+
+LogicBinaryExpression
+    = CompareBinaryExpression ("&&"|"||") CompareBinaryExpression                         -- compose
+    | CompareBinaryExpression                                                             -- derive
+
+TernaryExpression
+    = LogicBinaryExpression "?" LogicBinaryExpression ":" LogicBinaryExpression           -- compose
+    | LogicBinaryExpression                                                               -- derive
+
+AssignExpression
+    = TernaryExpression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") TernaryExpression        -- assign
+    | name ":" Type "=" TernaryExpression                                                 -- assignHint
+    | TernaryExpression                                                                   -- derive
 
 space
     += comment

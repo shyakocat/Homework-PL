@@ -1,10 +1,12 @@
 #version 450
 
-in float a;
-out float b;
+layout(location = 0) in float a;
+layout(location = 0) out float b;
 
 void main()
 {
-    b = -(a * (4.0 + (a / a)));
+    float x;
+    if (a < 0) x = -1; else x = 1;
+    b = x;
 }
 
