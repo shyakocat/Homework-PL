@@ -38,10 +38,13 @@ function State() {
     this.counter += 1;
     return `%${this.counter}`;
   };
-  this.getVar = (v) => {
+  this.getVar = (v, nullable = false) => {
     let vname = undefined;
     for (let tb = this.vtable; tb && !vname; tb = tb.__father__) vname = tb[v];
-    if (!vname) throw `variable ${v} not found`;
+    if (!vname) {
+      if (nullable) return null;
+      throw `variable ${v} not found`;
+    }
     return vname;
   };
   this.setVar = (v, dc, tp) => {
@@ -338,6 +341,12 @@ let actions = {
     return s.parse();
   },
 
+  PropertyExpression_getMember(e, _dot, m) {
+    let expr_v = e.parse()
+    let member = m.parse()
+
+  },
+
   UnaryExpression_compose(op, expr) {
     let expr_v = expr.parse();
     switch (op.sourceString) {
@@ -368,10 +377,10 @@ let actions = {
       op === "*"
         ? "OpFMul"
         : op === "/"
-        ? "OpFDiv"
-        : op === "%"
-        ? "OpFMod"
-        : null;
+          ? "OpFDiv"
+          : op === "%"
+            ? "OpFMod"
+            : null;
     console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
@@ -411,16 +420,16 @@ let actions = {
       op === "=="
         ? "OpFOrdEqual"
         : op === "!="
-        ? "OpFOrdNotEqual"
-        : op === "<"
-        ? "OpFOrdLessThan"
-        : op === ">"
-        ? "OpFOrdGreaterThan"
-        : op === "<="
-        ? "OpFOrdLessThanEqual"
-        : op === ">="
-        ? "OpFOrdGreaterThanEqual"
-        : null;
+          ? "OpFOrdNotEqual"
+          : op === "<"
+            ? "OpFOrdLessThan"
+            : op === ">"
+              ? "OpFOrdGreaterThan"
+              : op === "<="
+                ? "OpFOrdLessThanEqual"
+                : op === ">="
+                  ? "OpFOrdGreaterThanEqual"
+                  : null;
     console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
@@ -444,6 +453,25 @@ let actions = {
     } else {
       throw "not implement";
     }
+    return expr_v;
+  },
+  AssignExpression_assignHint(_dc, name, _s, type, _e, expr) {
+    let v = name.parse()
+    let tp = type.parse()
+    let expr_v = expr;
+    if (st.getVar(v, true) !== null) {
+      throw `redefine variable ${v}`;
+    }
+    if (expr_v.typeName !== tp) {
+      throw `assign not valid, got ${expr_v.typeName}, expected ${tp}`
+    }
+    let cur = st.setVar(v, _dc.parse(), tp);
+    expr_v.code.push(
+      `${ptr} = OpTypePointer ${dc} ${st.getType(tp)}`,
+      `${cur} = OpVariable ${ptr} ${dc}`,
+      `OpStore ${cur} ${expr_v.value}`,
+    )
+    expr_v.value = cur;
     return expr_v;
   },
 };

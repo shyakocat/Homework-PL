@@ -4,5 +4,6 @@ layout(location = 0)in float a;
 layout(location = 0)out float b;
 
 void main() {
-    b = (-a) * 4 + (a / a);
+    if (a < 0) b = -1;
+    else b = 1;
 }

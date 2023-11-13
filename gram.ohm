@@ -21,13 +21,20 @@ VarDefine
 Function
     = ("fn"|"function") name "(" Parameters ")" ("->" Type)? Expression
 
-number
+intNumber
     = digit+ (~("."|digit))                    -- decNumber
-    | digit* "." digit* (~digit)               -- floatNumber
-    | digit+ ("." digit*)? ("e"|"E") digit+    -- floatSciNumber
     | "0x" hexDigit+ (~hexDigit)               -- hexNumber
-    | "0o" ("0".."7")+                         -- octNumber
-    | "0b" ("0".."1")+                         -- binNumber
+    | "0o" ("0".."7")+ (~("0".."7"))           -- octNumber
+    | "0b" ("0".."1")+ (~("0".."1"))           -- binNumber
+
+floatNumber
+    = digit* "." digit* (~digit)                       -- floatNumber
+    | digit+ ("." digit*)? ("e"|"E") digit+ (~digit)   -- floatSciNumber
+
+number
+    = floatNumber                              -- double
+    | intNumber                                -- int
+    | signNumber "f"                           -- float
     | ("+"|"-") number                         -- signNumber
 
 keyword
@@ -100,7 +107,7 @@ TernaryExpression
 
 AssignExpression
     = TernaryExpression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") TernaryExpression        -- assign
-    | name ":" Type "=" TernaryExpression                                                 -- assignHint
+    | ("var"|"let")? name ":" Type "=" TernaryExpression                                  -- assignHint
     | TernaryExpression                                                                   -- derive
 
 space
