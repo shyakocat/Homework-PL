@@ -16,8 +16,8 @@ var PluralTypeDict = {
   ivec2: ["OpTypeVector", "int", 2],
   ivec3: ["OpTypeVector", "int", 3],
   ivec4: ["OpTypeVector", "int", 4],
-  mat3: ["OpTypeMatrix", "float", 3],
-  mat4: ["OpTypeMatrix", "float", 4],
+  mat3: ["OpTypeMatrix", "vec3", 3],
+  mat4: ["OpTypeMatrix", "vec4", 4],
 };
 
 var DecoratorDict = {
@@ -409,6 +409,7 @@ let actions = {
       value: cur,
       type: tp,
       typeName: cnum.typeName,
+      isLiteral: true,
     };
     return expr_v;
   },
@@ -437,16 +438,73 @@ let actions = {
   PropertyExpression_getMember(e, _dot, m) {
     let expr_v = e.parse();
     let member = m.parse();
+    if (expr_v.typeName.search(/vec[234]/) !== -1) {
+      if (
+        member.length >= 1 &&
+        member.length <= 4 &&
+        [...member].every((c) => "xyzwrgba".includes(c))
+      ) {
+        expr_v.typeName = member.length === 1 ? "float" : `vec${member.length}`;
+        expr_v.type = st.getType(expr_v.typeName);
+        let cur = st.getNext();
+        let v = expr_v.value;
+        const idmap = { x: 0, y: 1, z: 2, w: 3, r: 0, g: 1, b: 2, a: 3 };
+        let ids = [...member].map((c) => idmap[c]);
+        expr_v.code.push(
+          `${cur} = OpVectorShuffle ${expr_v.type} ${v} ${v} ${ids.join(" ")}`
+        );
+        expr_v.value = cur;
+        return expr_v;
+      }
+    }
+    throw "invalid get member";
+  },
+  PropertyExpression_callFunc(func, _l, params, _r) {
+    func = func.parse();
+    params = params.asIteration().children.map((p) => p.parse());
+    if (func.search(/vec[234]/) !== -1) {
+      if (params.every((p) => p.isLiteral)) {
+        let cur = st.getNext();
+        let tp = st.getType(func);
+        expr_v = {
+          code: [
+            `${cur} = OpConstantComposite ${tp} ${params
+              .map((p) => p.value)
+              .join(" ")}`,
+          ],
+          typeName: func,
+          type: tp,
+          value: cur,
+        };
+        return expr_v;
+      }
+    }
+    throw "invalid call func";
   },
 
   UnaryExpression_compose(op, expr) {
     let expr_v = expr.parse();
+    let cur;
+    let instr;
     switch (op.sourceString) {
       case "+":
         break;
       case "-":
-        let cur = st.getNext();
+        cur = st.getNext();
         expr_v.code.push(`${cur} = OpFNegate ${expr_v.type} ${expr_v.value}`);
+        expr_v.value = cur;
+        break;
+      case "++":
+      case "--":
+        console.assert(expr_v.lvalue, `"${expr_v.sourceString}" not a l-value`);
+        cur = st.getNext();
+        instr = op.sourceString === "++" ? "OpIAdd" : "OpISub";
+        expr_v.code.push(
+          `${cur} = ${instr} ${expr_v.type} ${expr_v.value} ${st.getConst(
+            "1"
+          )}`,
+          `OpStore ${expr_v.lvalue} ${cur}`
+        );
         expr_v.value = cur;
         break;
       default:
@@ -462,7 +520,6 @@ let actions = {
       value: cur,
       type: e1.type,
       typeName: e1.typeName,
-      isFloat: true,
     };
     op = op.sourceString;
     let instr =
@@ -473,6 +530,11 @@ let actions = {
         : op === "%"
         ? "OpFMod"
         : null;
+    if (op === "*" && e1.typeName === "vec3" && e2.typeName === "mat3") {
+      instr = "OpVectorTimesMatrix";
+      expr_v.typeName = "vec3";
+      expr_v.type = st.getType(expr_v.typeName);
+    }
     console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`

@@ -10,6 +10,7 @@ void main() {
         c[i] = 2.0f;
     }
 
+    vec2 t = b.xy;
     c = b * a;
     mat3 m = mat3(1.0f);
     m[1] = b;

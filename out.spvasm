@@ -2,44 +2,27 @@
 			OpMemoryModel Logical GLSL450
 			OpEntryPoint Vertex %f_main "main" 
 		%t_float = 	OpTypeFloat 32
+		%t_vec3 = 	OpTypeVector %t_float 3
+		%t_mat3 = 	OpTypeMatrix %t_vec3 3
 		%t_void = 	OpTypeVoid
-		%t_int = 	OpTypeInt 32 1
-		%t_bool = 	OpTypeBool
-		%c_0 = 	OpConstant %t_int 0
-		%c_3 = 	OpConstant %t_int 3
-		%c_1 = 	OpConstant %t_int 1
-		%c_5_0 = 	OpConstant %t_float 5.0
+		%c_1_0 = 	OpConstant %t_float 1.0
+		%c_2_0 = 	OpConstant %t_float 2.0
+		%c_3_0 = 	OpConstant %t_float 3.0
 			OpName %2 "a"
 			OpName %4 "b"
+			OpName %6 "c"
 			OpName %f_main "main"
-		%1 = 	OpTypePointer Output %t_float
-		%2 = 	OpVariable %1 Output
-		%3 = 	OpTypePointer Output %t_float
-		%4 = 	OpVariable %3 Output
-		%5 = 	OpTypeFunction %t_void 
-		%f_main = 	OpFunction %t_void None %5
-		%6 = 	OpLabel
-		%7 = 	OpTypePointer Function %t_int
-		%8 = 	OpVariable %7 Function
-			OpStore %8 %c_0
-			OpBranch %15
-		%15 = 	OpLabel
-			OpLoopMerge %19 %18 None
-			OpBranch %16
-		%16 = 	OpLabel
-		%9 = 	OpLoad %t_int %8
-		%10 = 	OpFOrdLessThan %t_bool %9 %c_3
-			OpBranchConditional %10 %17 %19
-		%17 = 	OpLabel
-		%14 = 	OpLoad %t_float %4
-			OpStore %4 %c_5_0
-			OpBranch %18
-		%18 = 	OpLabel
-		%11 = 	OpLoad %t_int %8
-		%12 = 	OpLoad %t_int %8
-		%13 = 	OpFAdd %t_int %12 %c_1
-			OpStore %8 %13
-			OpBranch %15
-		%19 = 	OpLabel
+		%1 = 	OpTypePointer Input %t_mat3
+		%2 = 	OpVariable %1 Input
+		%3 = 	OpTypePointer Input %t_vec3
+		%4 = 	OpVariable %3 Input
+		%5 = 	OpTypePointer Output %t_vec3
+		%6 = 	OpVariable %5 Output
+		%7 = 	OpTypeFunction %t_void 
+		%f_main = 	OpFunction %t_void None %7
+		%8 = 	OpLabel
+		%9 = 	OpLoad %t_vec3 %6
+		%10 = 	OpConstantComposite %t_vec3 %c_1_0 %c_2_0 %c_3_0
+			OpStore %6 %10
 			OpReturn
 			OpFunctionEnd

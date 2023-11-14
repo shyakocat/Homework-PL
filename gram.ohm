@@ -76,12 +76,12 @@ PrimaryExpression
 
 PropertyExpression
     = PrimaryExpression "[" Expression "]"                                  -- getAddress
-    | PrimaryExpression "(" ListOf<Expression, ","> ")"                     -- callFunc
+    | name "(" ListOf<Expression, ","> ")"                                  -- callFunc
     | PrimaryExpression "." name                                            -- getMember
     | PrimaryExpression                                                     -- derive
     
 UnaryExpression
-    = ("!"|"~"|"+"|"-"|"++"|"--") PropertyExpression                                      -- compose
+    = ("++"|"--"|"!"|"~"|"+"|"-") PropertyExpression                                      -- compose
     | PropertyExpression                                                                  -- derive 
 
 MultiplicativeBinaryExpression

@@ -1,13 +1,11 @@
 #version 450
 
-out float a;
-out float b;
+in mat3 a;
+in vec3 b;
+out vec3 c;
 
 void main()
 {
-    for (int _17 = 0; _17 < 3; _17++)
-    {
-        b = 5.0;
-    }
+    c = vec3(1.0, 2.0, 3.0);
 }
 

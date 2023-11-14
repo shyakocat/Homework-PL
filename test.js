@@ -28,13 +28,12 @@ fn add(a : int, b : int) a+b
 
 s = `
 
-out a : float;
-out b : float;
+in a : mat3;
+in b : vec3;
+out c : vec3;
 
 fn main() -> void {
-  for (i : int = 0; i < 3; i = i + 1) {
-    b = 5.0f
-  }
+  c = vec3(1.0f, 2.0f, 3.0f)
 }
 
 `;
