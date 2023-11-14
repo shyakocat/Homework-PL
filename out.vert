@@ -1,12 +1,13 @@
 #version 450
 
-layout(location = 0) in float a;
-layout(location = 0) out float b;
+out float a;
+out float b;
 
 void main()
 {
-    float x;
-    if (a < 0) x = -1; else x = 1;
-    b = x;
+    for (int _17 = 0; _17 < 3; _17++)
+    {
+        b = 5.0;
+    }
 }
 

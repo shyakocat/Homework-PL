@@ -31,11 +31,14 @@ floatNumber
     = digit* "." digit* (~digit)                       -- floatNumber
     | digit+ ("." digit*)? ("e"|"E") digit+ (~digit)   -- floatSciNumber
 
+generalNumber
+    = intNumber                                -- intNumber
+    | floatNumber                              -- floatNumebr
+
 number
-    = floatNumber                              -- double
-    | intNumber                                -- int
-    | signNumber "f"                           -- float
-    | ("+"|"-") number                         -- signNumber
+    = floatNumber ~("f")                       -- double
+    | intNumber ~("f")                         -- int
+    | generalNumber "f"                        -- float
 
 keyword
     = "if"

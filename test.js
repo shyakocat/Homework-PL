@@ -26,16 +26,18 @@ fn main(gid : uvec3, lid: uvec3) {
 fn add(a : int, b : int) a+b
 `;
 
-// s = `
+s = `
 
-// in a : float;
-// out b : float;
+out a : float;
+out b : float;
 
-// fn main() -> void {
-//   b = if (a < 0) -1.0 else 1.0
-// }
+fn main() -> void {
+  for (i : int = 0; i < 3; i = i + 1) {
+    b = 5.0f
+  }
+}
 
-// `;
+`;
 
 
 ret = Parse(s);

@@ -1,7 +1,7 @@
 const ohm = require("ohm-js");
 const fs = require("fs");
 
-var TypeDict = {
+var BaseTypeDict = {
   int: "OpTypeInt 32 1",
   uint: "OpTypeInt 32 0",
   float: "OpTypeFloat 32",
@@ -9,15 +9,29 @@ var TypeDict = {
   bool: "OpTypeBool",
 };
 
+var PluralTypeDict = {
+  vec2: ["OpTypeVector", "float", 2],
+  vec3: ["OpTypeVector", "float", 3],
+  vec4: ["OpTypeVector", "float", 4],
+  ivec2: ["OpTypeVector", "int", 2],
+  ivec3: ["OpTypeVector", "int", 3],
+  ivec4: ["OpTypeVector", "int", 4],
+  mat3: ["OpTypeMatrix", "float", 3],
+  mat4: ["OpTypeMatrix", "float", 4],
+};
+
 var DecoratorDict = {
   var: "Private",
   in: "Input",
   out: "Output",
   uniform: "Uniform",
+  func: "Function",
 };
 
 function State() {
   this.counter = 0;
+  this.dtable = {};
+  this.dlist = [];
   this.ctable = {};
   this.ttable = {};
   this.vtable = {};
@@ -30,8 +44,18 @@ function State() {
   };
   this.getType = (tp) => {
     let tname = "%t_" + tp;
-    if (TypeDict[tp] !== undefined)
-      this.ctable[tname] = `${tname} = ${TypeDict[tp]}`;
+    if (this.dtable[tname] === undefined) {
+      if (BaseTypeDict[tp] !== undefined) {
+        let code = `${tname} = ${BaseTypeDict[tp]}`;
+        this.dtable[tname] = code;
+        this.dlist.push(code);
+      } else if (PluralTypeDict[tp] !== undefined) {
+        let [ptype, btype, vnum] = PluralTypeDict[tp];
+        let code = `${tname} = ${ptype} ${this.getType(btype)} ${vnum}`;
+        this.dtable[tname] = code;
+        this.dlist.push(code);
+      }
+    }
     return tname;
   };
   this.getNext = () => {
@@ -79,6 +103,7 @@ let actions = {
         .filter((x) => x.decorator === "in" || x.decorator === "out")
         .map((x) => x.id)}`
     );
+    for (let x of st.dlist) pre.push(x);
     for (let x in st.ttable) pre.push(`OpName ${st.getType(x)} "${x}"`);
     for (let x of Object.values(st.ctable)) pre.push(x);
     for (let x in st.vtable) pre.push(`OpName ${st.getVar(x).id} "${x}"`);
@@ -150,8 +175,17 @@ let actions = {
     code.push(...["OpReturn", "OpFunctionEnd"]);
     return code;
   },
-  number(_1) {
+  intNumber(_1) {
     return this.sourceString;
+  },
+  floatNumber(_1) {
+    return this.sourceString;
+  },
+  generalNumber(_1) {
+    return this.sourceString;
+  },
+  number(num) {
+    return num.parse();
   },
   name(_1, _2) {
     return this.sourceString;
@@ -223,6 +257,25 @@ let actions = {
   },
   AssignExpression_derive(e) {
     return e.parse();
+  },
+
+  number_double(_) {
+    return {
+      typeName: "double",
+      value: this.sourceString,
+    };
+  },
+  number_int(_) {
+    return {
+      typeName: "int",
+      value: this.sourceString,
+    };
+  },
+  number_float(_, _f) {
+    return {
+      typeName: "float",
+      value: this.sourceString.slice(0, -1),
+    };
   },
 
   Statement_semiclon(_) {
@@ -297,6 +350,43 @@ let actions = {
     }
     return expr_v;
   },
+  Statement_forState(_f, _l, init, _1, cond, _2, cont, _r, body) {
+    st.pushScope();
+    init = init.parse();
+    cond = cond.parse();
+    cont = cont.parse();
+    body = body.parse();
+    let begin_l = st.getNext();
+    let cond_l = st.getNext();
+    let body_l = st.getNext();
+    let cont_l = st.getNext();
+    let end_l = st.getNext();
+    expr_v = {
+      code: [],
+      value: st.getType("void"),
+      type: st.getType("void"),
+      typeName: "void",
+    };
+    expr_v.code.push(
+      ...init.code,
+      `OpBranch ${begin_l}`,
+      `${begin_l} = OpLabel`,
+      `OpLoopMerge ${end_l} ${cont_l} None`,
+      `OpBranch ${cond_l}`,
+      `${cond_l} = OpLabel`,
+      ...cond.code,
+      `OpBranchConditional ${cond.value} ${body_l} ${end_l}`,
+      `${body_l} = OpLabel`,
+      ...body.code,
+      `OpBranch ${cont_l}`,
+      `${cont_l} = OpLabel`,
+      ...cont.code,
+      `OpBranch ${begin_l}`,
+      `${end_l} = OpLabel`
+    );
+    st.popScope();
+    return expr_v;
+  },
 
   PrimaryExpression_variableLiteral(name) {
     let cur = st.getNext();
@@ -307,18 +397,18 @@ let actions = {
       type: st.getType(v.type),
       typeName: v.type,
       lvalue: v.id,
-      isFloat: true, // 为了简化，我们只有浮点类型
     };
     return expr_v;
   },
   PrimaryExpression_numberLiteral(num) {
-    let cur = st.getNext();
-    let tp = st.getType("float");
+    let cnum = num.parse();
+    let cur = st.getConst(cnum.value);
+    let tp = st.getType(cnum.typeName);
     let expr_v = {
-      code: [`${cur} = OpConstant ${tp} ${num.sourceString}`],
+      code: [],
       value: cur,
       type: tp,
-      typeName: "float",
+      typeName: cnum.typeName,
     };
     return expr_v;
   },
@@ -327,24 +417,26 @@ let actions = {
     return es[es.length - 1];
   },
   PrimaryExpression_multiExpr(_l, xs, _r) {
+    st.pushScope();
     let es = xs.children.map((x) => x.parse());
     let code = [];
     for (let e of es) code.push(...e.code);
-    return {
+    let expr_v = {
       code: code,
       value: es[es.length - 1].value,
       type: es[es.length - 1].type,
       typeName: es[es.length - 1].typeName,
     };
+    st.popScope();
+    return expr_v;
   },
   PrimaryExpression_statement(s) {
     return s.parse();
   },
 
   PropertyExpression_getMember(e, _dot, m) {
-    let expr_v = e.parse()
-    let member = m.parse()
-
+    let expr_v = e.parse();
+    let member = m.parse();
   },
 
   UnaryExpression_compose(op, expr) {
@@ -377,10 +469,10 @@ let actions = {
       op === "*"
         ? "OpFMul"
         : op === "/"
-          ? "OpFDiv"
-          : op === "%"
-            ? "OpFMod"
-            : null;
+        ? "OpFDiv"
+        : op === "%"
+        ? "OpFMod"
+        : null;
     console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
@@ -420,16 +512,16 @@ let actions = {
       op === "=="
         ? "OpFOrdEqual"
         : op === "!="
-          ? "OpFOrdNotEqual"
-          : op === "<"
-            ? "OpFOrdLessThan"
-            : op === ">"
-              ? "OpFOrdGreaterThan"
-              : op === "<="
-                ? "OpFOrdLessThanEqual"
-                : op === ">="
-                  ? "OpFOrdGreaterThanEqual"
-                  : null;
+        ? "OpFOrdNotEqual"
+        : op === "<"
+        ? "OpFOrdLessThan"
+        : op === ">"
+        ? "OpFOrdGreaterThan"
+        : op === "<="
+        ? "OpFOrdLessThanEqual"
+        : op === ">="
+        ? "OpFOrdGreaterThanEqual"
+        : null;
     console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
@@ -440,6 +532,10 @@ let actions = {
   AssignExpression_assign(expr1, op, expr2) {
     let e1 = expr1.parse();
     let e2 = expr2.parse();
+    console.assert(
+      e1.typeName === e2.typeName,
+      `assign expected ${e1.typeName} got ${e2.typeName}`
+    );
     let expr_v = {
       code: [...e1.code, ...e2.code],
       value: e2.value,
@@ -456,21 +552,22 @@ let actions = {
     return expr_v;
   },
   AssignExpression_assignHint(_dc, name, _s, type, _e, expr) {
-    let v = name.parse()
-    let tp = type.parse()
-    let expr_v = expr;
+    let v = name.parse();
+    let tp = type.parse();
+    let expr_v = expr.parse();
     if (st.getVar(v, true) !== null) {
       throw `redefine variable ${v}`;
     }
     if (expr_v.typeName !== tp) {
-      throw `assign not valid, got ${expr_v.typeName}, expected ${tp}`
+      throw `assign not valid, got ${expr_v.typeName}, expected ${tp}`;
     }
-    let cur = st.setVar(v, _dc.parse(), tp);
+    let ptr = st.getNext();
+    let cur = st.setVar(v, "func", tp);
     expr_v.code.push(
-      `${ptr} = OpTypePointer ${dc} ${st.getType(tp)}`,
-      `${cur} = OpVariable ${ptr} ${dc}`,
-      `OpStore ${cur} ${expr_v.value}`,
-    )
+      `${ptr} = OpTypePointer Function ${st.getType(tp)}`,
+      `${cur} = OpVariable ${ptr} Function`,
+      `OpStore ${cur} ${expr_v.value}`
+    );
     expr_v.value = cur;
     return expr_v;
   },
