@@ -89,6 +89,27 @@ function State() {
 }
 var st;
 
+function SolveCallFunction(func, params) {
+  if (func.search(/vec[234]/) !== -1) {
+    if (params.every((p) => p.isLiteral)) {
+      let cur = st.getNext();
+      let tp = st.getType(func);
+      expr_v = {
+        code: [
+          `${cur} = OpConstantComposite ${tp} ${params
+            .map((p) => p.value)
+            .join(" ")}`,
+        ],
+        typeName: func,
+        type: tp,
+        value: cur,
+      };
+      return expr_v;
+    }
+  }
+  throw `invalid call function ${func}`;
+}
+
 let actions = {
   Program(scripts) {
     st = new State();
@@ -457,29 +478,57 @@ let actions = {
         return expr_v;
       }
     }
-    throw "invalid get member";
+    return SolveCallFunction(member, [expr_v]);
+    throw `invalid get member ${member}`;
   },
   PropertyExpression_callFunc(func, _l, params, _r) {
     func = func.parse();
     params = params.asIteration().children.map((p) => p.parse());
-    if (func.search(/vec[234]/) !== -1) {
-      if (params.every((p) => p.isLiteral)) {
-        let cur = st.getNext();
-        let tp = st.getType(func);
-        expr_v = {
-          code: [
-            `${cur} = OpConstantComposite ${tp} ${params
-              .map((p) => p.value)
-              .join(" ")}`,
-          ],
-          typeName: func,
-          type: tp,
-          value: cur,
-        };
-        return expr_v;
+    return SolveCallFunction(func, params);
+  },
+  PropertyExpression_ufcs(phead, _d, func, _l, ptail, _r) {
+    func = func.parse();
+    params = [phead.parse()];
+    if (ptail.numChildren > 0)
+      params.push(
+        ...ptail
+          .child(0)
+          ?.asIteration()
+          .children.map((p) => p.parse())
+      );
+    return SolveCallFunction(func, params);
+  },
+  PropertyExpression_getAddress(v, _l, addr, _r) {
+    v = v.parse();
+    addr = addr.parse();
+    expr_v = {
+      code: [...v.code, ...addr.code],
+      typeName: null,
+      type: null,
+      value: null,
+    };
+    if (v.typeName.search(/vec[234]/) !== -1) {
+      console.assert(
+        ["int", "uint"].includes(addr.typeName),
+        `address type expected int got ${addr.typeName}`
+      );
+      expr_v.typeName = "float";
+      expr_v.type = st.getType(expr_v.typeName);
+      let ptr = st.getNext();
+      let id = st.getNext();
+      let cur = st.getNext();
+      expr_v.code.push(
+        `${ptr} = OpTypePointer Function ${expr_v.type}`,
+        `${id} = OpAccessChain ${ptr} ${v.value} ${addr.value}`,
+        `${cur} = OpLoad ${expr_v.type} ${id}`
+      );
+      expr_v.value = cur;
+      if (v.lvalue) {
+        expr_v.lvalue = id;
       }
+      return expr_v;
     }
-    throw "invalid call func";
+    throw `invalid get address ${addr.typeName} of ${v.typeName}`;
   },
 
   UnaryExpression_compose(op, expr) {

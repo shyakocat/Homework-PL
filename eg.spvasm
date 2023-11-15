@@ -1,7 +1,7 @@
 ; SPIR-V
 ; Version: 1.0
 ; Generator: Google Shaderc over Glslang; 11
-; Bound: 60
+; Bound: 56
 ; Schema: 0
                OpCapability Shader
           %1 = OpExtInstImport "GLSL.std.450"
@@ -13,7 +13,6 @@
                OpName %main "main"
                OpName %i "i"
                OpName %c "c"
-               OpName %t "t"
                OpName %b "b"
                OpName %a "a"
                OpName %m "m"
@@ -34,30 +33,27 @@
     %float_2 = OpConstant %float 2
 %_ptr_Output_float = OpTypePointer Output %float
       %int_1 = OpConstant %int 1
-    %v2float = OpTypeVector %float 2
-%_ptr_Function_v2float = OpTypePointer Function %v2float
+    %float_1 = OpConstant %float 1
+       %uint = OpTypeInt 32 0
+     %uint_0 = OpConstant %uint 0
 %_ptr_Input_v3float = OpTypePointer Input %v3float
           %b = OpVariable %_ptr_Input_v3float Input
 %mat3v3float = OpTypeMatrix %v3float 3
 %_ptr_Input_mat3v3float = OpTypePointer Input %mat3v3float
           %a = OpVariable %_ptr_Input_mat3v3float Input
 %_ptr_Function_mat3v3float = OpTypePointer Function %mat3v3float
-    %float_1 = OpConstant %float 1
     %float_0 = OpConstant %float 0
-         %47 = OpConstantComposite %v3float %float_1 %float_0 %float_0
-         %48 = OpConstantComposite %v3float %float_0 %float_1 %float_0
-         %49 = OpConstantComposite %v3float %float_0 %float_0 %float_1
-         %50 = OpConstantComposite %mat3v3float %47 %48 %49
+         %45 = OpConstantComposite %v3float %float_1 %float_0 %float_0
+         %46 = OpConstantComposite %v3float %float_0 %float_1 %float_0
+         %47 = OpConstantComposite %v3float %float_0 %float_0 %float_1
+         %48 = OpConstantComposite %mat3v3float %45 %46 %47
 %_ptr_Function_v3float = OpTypePointer Function %v3float
       %int_2 = OpConstant %int 2
 %float_3_0999999 = OpConstant %float 3.0999999
-       %uint = OpTypeInt 32 0
-     %uint_0 = OpConstant %uint 0
 %_ptr_Function_float = OpTypePointer Function %float
        %main = OpFunction %void None %3
           %5 = OpLabel
           %i = OpVariable %_ptr_Function_int Function
-          %t = OpVariable %_ptr_Function_v2float Function
           %m = OpVariable %_ptr_Function_mat3v3float Function
                OpStore %i %int_0
                OpBranch %10
@@ -79,18 +75,17 @@
                OpStore %i %29
                OpBranch %10
          %12 = OpLabel
-         %35 = OpLoad %v3float %b
-         %36 = OpVectorShuffle %v2float %35 %35 0 1
-               OpStore %t %36
-         %37 = OpLoad %v3float %b
-         %41 = OpLoad %mat3v3float %a
-         %42 = OpVectorTimesMatrix %v3float %37 %41
-               OpStore %c %42
-               OpStore %m %50
-         %51 = OpLoad %v3float %b
-         %53 = OpAccessChain %_ptr_Function_v3float %m %int_1
-               OpStore %53 %51
-         %59 = OpAccessChain %_ptr_Function_float %m %int_2 %uint_0
-               OpStore %59 %float_3_0999999
+         %33 = OpAccessChain %_ptr_Output_float %c %uint_0
+               OpStore %33 %float_1
+         %36 = OpLoad %v3float %b
+         %40 = OpLoad %mat3v3float %a
+         %41 = OpVectorTimesMatrix %v3float %36 %40
+               OpStore %c %41
+               OpStore %m %48
+         %49 = OpLoad %v3float %b
+         %51 = OpAccessChain %_ptr_Function_v3float %m %int_1
+               OpStore %51 %49
+         %55 = OpAccessChain %_ptr_Function_float %m %int_2 %uint_0
+               OpStore %55 %float_3_0999999
                OpReturn
                OpFunctionEnd

@@ -33,7 +33,7 @@ in b : vec3;
 out c : vec3;
 
 fn main() -> void {
-  c = vec3(1.0f, 2.0f, 3.0f)
+  x : float = c[0];
 }
 
 `;

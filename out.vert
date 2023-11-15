@@ -6,6 +6,6 @@ out vec3 c;
 
 void main()
 {
-    c = vec3(1.0, 2.0, 3.0);
+    float _21 = c.x;
 }
 

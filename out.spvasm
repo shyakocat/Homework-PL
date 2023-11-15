@@ -5,9 +5,8 @@
 		%t_vec3 = 	OpTypeVector %t_float 3
 		%t_mat3 = 	OpTypeMatrix %t_vec3 3
 		%t_void = 	OpTypeVoid
-		%c_1_0 = 	OpConstant %t_float 1.0
-		%c_2_0 = 	OpConstant %t_float 2.0
-		%c_3_0 = 	OpConstant %t_float 3.0
+		%t_int = 	OpTypeInt 32 1
+		%c_0 = 	OpConstant %t_int 0
 			OpName %2 "a"
 			OpName %4 "b"
 			OpName %6 "c"
@@ -22,7 +21,11 @@
 		%f_main = 	OpFunction %t_void None %7
 		%8 = 	OpLabel
 		%9 = 	OpLoad %t_vec3 %6
-		%10 = 	OpConstantComposite %t_vec3 %c_1_0 %c_2_0 %c_3_0
-			OpStore %6 %10
+		%10 = 	OpTypePointer Function %t_float
+		%11 = 	OpAccessChain %10 %9 %c_0
+		%12 = 	OpLoad %t_float %11
+		%13 = 	OpTypePointer Function %t_float
+		%14 = 	OpVariable %13 Function
+			OpStore %14 %12
 			OpReturn
 			OpFunctionEnd
