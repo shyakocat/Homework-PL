@@ -6,6 +6,6 @@ out vec3 c;
 
 void main()
 {
-    float _21 = c.x;
+    float _24 = (sin(1.0) + cos(2.0)) + sqrt(3.0);
 }
 

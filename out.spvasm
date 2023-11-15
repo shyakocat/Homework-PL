@@ -1,12 +1,14 @@
 			OpCapability Shader
 			OpMemoryModel Logical GLSL450
+		%ext = 	OpExtInstImport "GLSL.std.450"
 			OpEntryPoint Vertex %f_main "main" 
 		%t_float = 	OpTypeFloat 32
 		%t_vec3 = 	OpTypeVector %t_float 3
 		%t_mat3 = 	OpTypeMatrix %t_vec3 3
 		%t_void = 	OpTypeVoid
-		%t_int = 	OpTypeInt 32 1
-		%c_0 = 	OpConstant %t_int 0
+		%c_1_0 = 	OpConstant %t_float 1.0
+		%c_2_0 = 	OpConstant %t_float 2.0
+		%c_3_0 = 	OpConstant %t_float 3.0
 			OpName %2 "a"
 			OpName %4 "b"
 			OpName %6 "c"
@@ -20,12 +22,13 @@
 		%7 = 	OpTypeFunction %t_void 
 		%f_main = 	OpFunction %t_void None %7
 		%8 = 	OpLabel
-		%9 = 	OpLoad %t_vec3 %6
-		%10 = 	OpTypePointer Function %t_float
-		%11 = 	OpAccessChain %10 %9 %c_0
-		%12 = 	OpLoad %t_float %11
-		%13 = 	OpTypePointer Function %t_float
-		%14 = 	OpVariable %13 Function
-			OpStore %14 %12
+		%9 = 	OpExtInst %t_float %ext Sin %c_1_0
+		%10 = 	OpExtInst %t_float %ext Cos %c_2_0
+		%11 = 	OpFAdd %t_float %9 %10
+		%12 = 	OpExtInst %t_float %ext Sqrt %c_3_0
+		%13 = 	OpFAdd %t_float %11 %12
+		%14 = 	OpTypePointer Function %t_float
+		%15 = 	OpVariable %14 Function
+			OpStore %15 %13
 			OpReturn
 			OpFunctionEnd

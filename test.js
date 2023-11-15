@@ -33,7 +33,7 @@ in b : vec3;
 out c : vec3;
 
 fn main() -> void {
-  x : float = c[0];
+  x : float = sin(1.0f) + cos(2.0f) + 3.0f.sqrt;
 }
 
 `;

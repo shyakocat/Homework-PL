@@ -6,13 +6,5 @@ layout(location = 5) in vec3 b;
 layout(location = 0) out vec3 c;
 
 void main() {
-    for (int i = 0; i < 3; ++i) {
-        c[i] = 2.0f;
-    }
-
-    c.x = 1.0;
-    c = b * a;
-    mat3 m = mat3(1.0f);
-    m[1] = b;
-    m[2][0] = 3.1f;
+    c.x = sin(b.x);
 }

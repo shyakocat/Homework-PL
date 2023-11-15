@@ -94,7 +94,7 @@ function SolveCallFunction(func, params) {
     if (params.every((p) => p.isLiteral)) {
       let cur = st.getNext();
       let tp = st.getType(func);
-      expr_v = {
+      let expr_v = {
         code: [
           `${cur} = OpConstantComposite ${tp} ${params
             .map((p) => p.value)
@@ -107,6 +107,48 @@ function SolveCallFunction(func, params) {
       return expr_v;
     }
   }
+
+  const extTable = {
+    sin: ["Sin", "float"],
+    round: ["Round", "float"],
+    trunc: ["Trunc", "float"],
+    abs: ["FAbs", "float"],
+    floor: ["Floor", "float"],
+    ceil: ["Ceil", "float"],
+    cos: ["Cos", "float"],
+    tan: ["Tan", "float"],
+    sinh: ["Sinh", "float"],
+    cosh: ["Cosh", "float"],
+    tanh: ["Tanh", "float"],
+    pow: ["Pow", "float"],
+    exp: ["Exp", "float"],
+    log: ["Log", "float"],
+    sqrt: ["Sqrt", "float"],
+    min: ["FMin", "float"],
+    max: ["FMax", "float"],
+    clamp: ["FClamp", "float"],
+    mix: ["FMix", "float"],
+    step: ["Step", "float"],
+    length: ["Length", "float"],
+    normalize: ["Normalize", "float"],
+  };
+  let f = extTable[func];
+  if (f !== undefined) {
+    let cur = st.getNext();
+    let expr_v = {
+      code: params.map((p) => p.code).flat(),
+      typeName: f[1],
+      type: st.getType(f[1]),
+      value: cur,
+    };
+    expr_v.code.push(
+      `${cur} = OpExtInst ${expr_v.type} %ext ${f[0]} ${params
+        .map((p) => p.value)
+        .join(" ")}`
+    );
+    return expr_v;
+  }
+
   throw `invalid call function ${func}`;
 }
 
@@ -114,6 +156,7 @@ let actions = {
   Program(scripts) {
     st = new State();
     let code = ["OpCapability Shader", "OpMemoryModel Logical GLSL450"];
+    code.push(`%ext = OpExtInstImport "GLSL.std.450"`);
     let body = [];
     for (let x of scripts.children) body.push(...x.parse());
     let pre = [];

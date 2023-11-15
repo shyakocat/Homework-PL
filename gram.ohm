@@ -86,23 +86,23 @@ UnaryExpression
     | PropertyExpression                                                                  -- derive 
 
 MultiplicativeBinaryExpression
-    = UnaryExpression ("*"|"/"|"%") UnaryExpression                                       -- compose
+    = MultiplicativeBinaryExpression ("*"|"/"|"%") UnaryExpression                        -- compose
     | UnaryExpression                                                                     -- derive
 
 AdditiveBinaryExpression
-    = MultiplicativeBinaryExpression ("+"|"-") MultiplicativeBinaryExpression             -- compose
+    = AdditiveBinaryExpression ("+"|"-") MultiplicativeBinaryExpression                   -- compose
     | MultiplicativeBinaryExpression                                                      -- derive
 
 BitBinaryExpression
-    = AdditiveBinaryExpression ("&"|"|"|"^") AdditiveBinaryExpression                     -- compose
+    = BitBinaryExpression ("&"|"|"|"^") AdditiveBinaryExpression                          -- compose
     | AdditiveBinaryExpression                                                            -- derive
 
 CompareBinaryExpression
-    = BitBinaryExpression ("=="|"!="|"<="|">="|"<"|">") BitBinaryExpression               -- compose
+    = CompareBinaryExpression ("=="|"!="|"<="|">="|"<"|">") BitBinaryExpression           -- compose
     | BitBinaryExpression                                                                 -- derive
 
 LogicBinaryExpression
-    = CompareBinaryExpression ("&&"|"||") CompareBinaryExpression                         -- compose
+    = LogicBinaryExpression ("&&"|"||") CompareBinaryExpression                           -- compose
     | CompareBinaryExpression                                                             -- derive
 
 TernaryExpression
@@ -110,8 +110,8 @@ TernaryExpression
     | LogicBinaryExpression                                                               -- derive
 
 AssignExpression
-    = TernaryExpression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") TernaryExpression        -- assign
-    | ("var"|"let")? name ":" Type "=" TernaryExpression                                  -- assignHint
+    = TernaryExpression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") AssignExpression         -- assign
+    | ("var"|"let")? name ":" Type "=" AssignExpression                                   -- assignHint
     | TernaryExpression                                                                   -- derive
 
 space
