@@ -149,6 +149,25 @@ function SolveCallFunction(func, params) {
     return expr_v;
   }
 
+  f = st.ftable[func];
+  if (f !== undefined) {
+    let val = st.getNext();
+    let tpName = f.return_type;
+    let tp = st.getType(tpName);
+    let expr_v = {
+      code: [
+        ...params.map((p) => p.code).flat(),
+        `${val} = OpFunctionCall ${tp} ${f.f_id} ${params
+          .map((p) => p.value)
+          .join(" ")}`,
+      ],
+      type: tp,
+      typeName: tpName,
+      value: val,
+    };
+    return expr_v;
+  }
+
   throw `invalid call function ${func}`;
 }
 
@@ -225,18 +244,27 @@ let actions = {
       return_type: tp,
       f_id: fid,
     };
+    st.pushScope();
     let code = [
       `${ftp} = OpTypeFunction ${st.getType(tp)} ${ps
         .map((p) => st.getType(p[1]))
         .join(" ")}`,
       `${fid} = OpFunction ${st.getType(tp)} None ${ftp}`,
-      `${st.getNext()} = OpLabel`,
     ];
-    st.pushScope();
+    for (let p of ps) {
+      let ptr = st.getNext();
+      let param = st.setVar(p[0], "func", p[1]);
+      code.push(
+        `${ptr} = OpTypePointer Function ${st.getType(p[1])}`,
+        `${param} = OpFunctionParameter ${ptr}`
+      );
+    }
+    code.push(`${st.getNext()} = OpLabel`);
     expr_v = expr.parse();
     code.push(...expr_v.code);
     st.popScope();
-    code.push(...["OpReturn", "OpFunctionEnd"]);
+    if (tp === "void") code.push("OpReturn");
+    code.push("OpFunctionEnd");
     return code;
   },
   intNumber(_1) {
@@ -416,15 +444,22 @@ let actions = {
   },
   Statement_forState(_f, _l, init, _1, cond, _2, cont, _r, body) {
     st.pushScope();
-    init = init.parse();
-    cond = cond.parse();
-    cont = cont.parse();
-    body = body.parse();
     let begin_l = st.getNext();
     let cond_l = st.getNext();
     let body_l = st.getNext();
     let cont_l = st.getNext();
     let end_l = st.getNext();
+    st.vtable["for"] = {
+      begin: begin_l,
+      cond: cond_l,
+      body: body_l,
+      cont: cont_l,
+      end: end_l,
+    };
+    init = init.parse();
+    cond = cond.parse();
+    cont = cont.parse();
+    body = body.parse();
     expr_v = {
       code: [],
       value: st.getType("void"),
@@ -449,6 +484,45 @@ let actions = {
       `${end_l} = OpLabel`
     );
     st.popScope();
+    return expr_v;
+  },
+  Statement_returnState(_r, expr) {
+    expr_v = expr.parse();
+    if (expr.sourceString === ";") {
+      expr_v = {
+        code: [`OpReturn`],
+        typeName: "void",
+        type: st.getType("void"),
+        value: "void",
+      };
+    } else {
+      expr_v.code.push(`OpReturnValue ${expr_v.value}`);
+      expr_v.typeName = "void";
+      expr_v.type = st.getType(expr_v.typeName);
+      expr_v.value = "%void";
+    }
+    return expr_v;
+  },
+  Statement_breakState(_b) {
+    let labels = st.getVar("for", true);
+    if (labels === null) throw "got break but no loop found";
+    let expr_v = {
+      code: [`OpBranch ${labels.end}`, `${st.getNext()} = OpLabel`],
+      typeName: "void",
+      type: st.getType("void"),
+      value: "%void",
+    };
+    return expr_v;
+  },
+  Statement_continueState(_c) {
+    let labels = st.getVar("for", true);
+    if (labels === null) throw "got continue but no loop found";
+    let expr_v = {
+      code: [`OpBranch ${labels.cont}`, `${st.getNext()} = OpLabel`],
+      typeName: "void",
+      type: st.getType("void"),
+      value: "%void",
+    };
     return expr_v;
   },
 
@@ -518,6 +592,7 @@ let actions = {
           `${cur} = OpVectorShuffle ${expr_v.type} ${v} ${v} ${ids.join(" ")}`
         );
         expr_v.value = cur;
+        if (expr_v.lvalue) expr_v.lvalue = cur;
         return expr_v;
       }
     }

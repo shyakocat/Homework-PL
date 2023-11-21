@@ -4,8 +4,13 @@ in mat3 a;
 in vec3 b;
 out vec3 c;
 
+float func(float _16)
+{
+    return sin(_16);
+}
+
 void main()
 {
-    float _24 = (sin(1.0) + cos(2.0)) + sqrt(3.0);
+    c.x = func(b.x);
 }
 

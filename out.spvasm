@@ -6,12 +6,10 @@
 		%t_vec3 = 	OpTypeVector %t_float 3
 		%t_mat3 = 	OpTypeMatrix %t_vec3 3
 		%t_void = 	OpTypeVoid
-		%c_1_0 = 	OpConstant %t_float 1.0
-		%c_2_0 = 	OpConstant %t_float 2.0
-		%c_3_0 = 	OpConstant %t_float 3.0
 			OpName %2 "a"
 			OpName %4 "b"
 			OpName %6 "c"
+			OpName %f_func "func"
 			OpName %f_main "main"
 		%1 = 	OpTypePointer Input %t_mat3
 		%2 = 	OpVariable %1 Input
@@ -19,16 +17,23 @@
 		%4 = 	OpVariable %3 Input
 		%5 = 	OpTypePointer Output %t_vec3
 		%6 = 	OpVariable %5 Output
-		%7 = 	OpTypeFunction %t_void 
-		%f_main = 	OpFunction %t_void None %7
-		%8 = 	OpLabel
-		%9 = 	OpExtInst %t_float %ext Sin %c_1_0
-		%10 = 	OpExtInst %t_float %ext Cos %c_2_0
-		%11 = 	OpFAdd %t_float %9 %10
-		%12 = 	OpExtInst %t_float %ext Sqrt %c_3_0
-		%13 = 	OpFAdd %t_float %11 %12
-		%14 = 	OpTypePointer Function %t_float
-		%15 = 	OpVariable %14 Function
-			OpStore %15 %13
+		%7 = 	OpTypeFunction %t_float %t_float
+		%f_func = 	OpFunction %t_float None %7
+		%8 = 	OpTypePointer Function %t_float
+		%9 = 	OpFunctionParameter %8
+		%10 = 	OpLabel
+		%11 = 	OpLoad %t_float %9
+		%12 = 	OpExtInst %t_float %ext Sin %11
+			OpReturnValue %12
+			OpFunctionEnd
+		%13 = 	OpTypeFunction %t_void 
+		%f_main = 	OpFunction %t_void None %13
+		%14 = 	OpLabel
+		%15 = 	OpLoad %t_vec3 %6
+		%16 = 	OpVectorShuffle %t_float %15 %15 0
+		%17 = 	OpLoad %t_vec3 %4
+		%18 = 	OpVectorShuffle %t_float %17 %17 0
+		%19 = 	OpFunctionCall %t_float %f_func %18
+			OpStore %16 %19
 			OpReturn
 			OpFunctionEnd

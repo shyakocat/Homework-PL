@@ -5,6 +5,16 @@ layout(location = 5) in vec3 b;
 
 layout(location = 0) out vec3 c;
 
+float func(float x) {
+    return sin(x);
+}
+
 void main() {
-    c.x = sin(b.x);
+    c.x = func(b.x);
+    for(int i = 1; i < 10; ++i) {
+        if(i == 5)
+            continue;
+        if(i == 6)
+            break;
+    }
 }

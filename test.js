@@ -32,8 +32,12 @@ in a : mat3;
 in b : vec3;
 out c : vec3;
 
+fn func(x : float) -> float {
+  return sin(x)
+}
+
 fn main() -> void {
-  x : float = sin(1.0f) + cos(2.0f) + 3.0f.sqrt;
+  c.x = func(b.x);
 }
 
 `;

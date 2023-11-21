@@ -1,7 +1,7 @@
 ; SPIR-V
 ; Version: 1.0
 ; Generator: Google Shaderc over Glslang; 11
-; Bound: 23
+; Bound: 60
 ; Schema: 0
                OpCapability Shader
           %1 = OpExtInstImport "GLSL.std.450"
@@ -11,8 +11,12 @@
                OpSourceExtension "GL_GOOGLE_cpp_style_line_directive"
                OpSourceExtension "GL_GOOGLE_include_directive"
                OpName %main "main"
+               OpName %func_f1_ "func(f1;"
+               OpName %x "x"
                OpName %c "c"
                OpName %b "b"
+               OpName %param "param"
+               OpName %i "i"
                OpName %a "a"
                OpDecorate %c Location 0
                OpDecorate %b Location 5
@@ -20,6 +24,8 @@
        %void = OpTypeVoid
           %3 = OpTypeFunction %void
       %float = OpTypeFloat 32
+%_ptr_Function_float = OpTypePointer Function %float
+          %8 = OpTypeFunction %float %_ptr_Function_float
     %v3float = OpTypeVector %float 3
 %_ptr_Output_v3float = OpTypePointer Output %v3float
           %c = OpVariable %_ptr_Output_v3float Output
@@ -29,15 +35,63 @@
      %uint_0 = OpConstant %uint 0
 %_ptr_Input_float = OpTypePointer Input %float
 %_ptr_Output_float = OpTypePointer Output %float
+        %int = OpTypeInt 32 1
+%_ptr_Function_int = OpTypePointer Function %int
+      %int_1 = OpConstant %int 1
+     %int_10 = OpConstant %int 10
+       %bool = OpTypeBool
+      %int_5 = OpConstant %int 5
+      %int_6 = OpConstant %int 6
 %mat3v3float = OpTypeMatrix %v3float 3
 %_ptr_Input_mat3v3float = OpTypePointer Input %mat3v3float
           %a = OpVariable %_ptr_Input_mat3v3float Input
        %main = OpFunction %void None %3
           %5 = OpLabel
-         %15 = OpAccessChain %_ptr_Input_float %b %uint_0
-         %16 = OpLoad %float %15
-         %17 = OpExtInst %float %1 Sin %16
-         %19 = OpAccessChain %_ptr_Output_float %c %uint_0
-               OpStore %19 %17
+      %param = OpVariable %_ptr_Function_float Function
+          %i = OpVariable %_ptr_Function_int Function
+         %25 = OpAccessChain %_ptr_Input_float %b %uint_0
+         %26 = OpLoad %float %25
+               OpStore %param %26
+         %27 = OpFunctionCall %float %func_f1_ %param
+         %29 = OpAccessChain %_ptr_Output_float %c %uint_0
+               OpStore %29 %27
+               OpStore %i %int_1
+               OpBranch %34
+         %34 = OpLabel
+               OpLoopMerge %36 %37 None
+               OpBranch %38
+         %38 = OpLabel
+         %39 = OpLoad %int %i
+         %42 = OpSLessThan %bool %39 %int_10
+               OpBranchConditional %42 %35 %36
+         %35 = OpLabel
+         %43 = OpLoad %int %i
+         %45 = OpIEqual %bool %43 %int_5
+               OpSelectionMerge %47 None
+               OpBranchConditional %45 %46 %47
+         %46 = OpLabel
+               OpBranch %37
+         %47 = OpLabel
+         %49 = OpLoad %int %i
+         %51 = OpIEqual %bool %49 %int_6
+               OpSelectionMerge %53 None
+               OpBranchConditional %51 %52 %53
+         %52 = OpLabel
+               OpBranch %36
+         %53 = OpLabel
+               OpBranch %37
+         %37 = OpLabel
+         %55 = OpLoad %int %i
+         %56 = OpIAdd %int %55 %int_1
+               OpStore %i %56
+               OpBranch %34
+         %36 = OpLabel
                OpReturn
+               OpFunctionEnd
+   %func_f1_ = OpFunction %float None %8
+          %x = OpFunctionParameter %_ptr_Function_float
+         %11 = OpLabel
+         %12 = OpLoad %float %x
+         %13 = OpExtInst %float %1 Sin %12
+               OpReturnValue %13
                OpFunctionEnd
