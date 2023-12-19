@@ -6,10 +6,20 @@
 		%t_vec3 = 	OpTypeVector %t_float 3
 		%t_mat3 = 	OpTypeMatrix %t_vec3 3
 		%t_void = 	OpTypeVoid
-			OpName %2 "a"
-			OpName %4 "b"
-			OpName %6 "c"
-			OpName %f_func "func"
+		%t_int = 	OpTypeInt 32 1
+		%t_bool = 	OpTypeBool
+		%t_vec2 = 	OpTypeVector %t_float 2
+		%c_3_0 = 	OpConstant %t_float 3.0
+		%c_1 = 	OpConstant %t_int 1
+		%c_4 = 	OpConstant %t_int 4
+		%c_2 = 	OpConstant %t_int 2
+		%c_10 = 	OpConstant %t_int 10
+		%c_1_0 = 	OpConstant %t_float 1.0
+		%c_0 = 	OpConstant %t_int 0
+			OpName %2 "MVP"
+			OpName %4 "Pos"
+			OpName %6 "Out"
+			OpName %f_add "add"
 			OpName %f_main "main"
 		%1 = 	OpTypePointer Input %t_mat3
 		%2 = 	OpVariable %1 Input
@@ -17,23 +27,130 @@
 		%4 = 	OpVariable %3 Input
 		%5 = 	OpTypePointer Output %t_vec3
 		%6 = 	OpVariable %5 Output
-		%7 = 	OpTypeFunction %t_float %t_float
-		%f_func = 	OpFunction %t_float None %7
+		%7 = 	OpTypeFunction %t_float %t_float %t_float
+		%f_add = 	OpFunction %t_float None %7
 		%8 = 	OpTypePointer Function %t_float
 		%9 = 	OpFunctionParameter %8
-		%10 = 	OpLabel
-		%11 = 	OpLoad %t_float %9
-		%12 = 	OpExtInst %t_float %ext Sin %11
-			OpReturnValue %12
+		%10 = 	OpTypePointer Function %t_float
+		%11 = 	OpFunctionParameter %10
+		%12 = 	OpLabel
+		%13 = 	OpLoad %t_float %9
+		%14 = 	OpLoad %t_float %11
+		%15 = 	OpFAdd %t_float %13 %14
+			OpReturnValue %15
 			OpFunctionEnd
-		%13 = 	OpTypeFunction %t_void 
-		%f_main = 	OpFunction %t_void None %13
-		%14 = 	OpLabel
-		%15 = 	OpLoad %t_vec3 %6
-		%16 = 	OpVectorShuffle %t_float %15 %15 0
-		%17 = 	OpLoad %t_vec3 %4
-		%18 = 	OpVectorShuffle %t_float %17 %17 0
-		%19 = 	OpFunctionCall %t_float %f_func %18
-			OpStore %16 %19
+		%16 = 	OpTypeFunction %t_void 
+		%f_main = 	OpFunction %t_void None %16
+		%17 = 	OpLabel
+		%18 = 	OpLoad %t_vec3 %6
+		%19 = 	OpLoad %t_vec3 %4
+		%20 = 	OpLoad %t_mat3 %2
+		%21 = 	OpVectorTimesMatrix %t_vec3 %19 %20
+			OpStore %6 %21
+		%22 = 	OpTypePointer Function %t_float
+		%23 = 	OpVariable %22 Function
+			OpStore %23 %c_3_0
+		%29 = 	OpTypePointer Function %t_int
+		%30 = 	OpVariable %29 Function
+			OpStore %30 %c_1
+			OpBranch %24
+		%24 = 	OpLabel
+			OpLoopMerge %28 %27 None
+			OpBranch %25
+		%25 = 	OpLabel
+		%31 = 	OpLoad %t_int %30
+		%32 = 	OpFOrdLessThanEqual %t_bool %31 %c_4
+			OpBranchConditional %32 %26 %28
+		%26 = 	OpLabel
+		%36 = 	OpLoad %t_int %30
+		%37 = 	OpFOrdEqual %t_bool %36 %c_2
+			OpSelectionMerge %43 None
+			OpBranchConditional %37 %42 %47
+		%42 = 	OpLabel
+		%38 = 	OpLoad %t_float %23
+		%39 = 	OpLoad %t_float %23
+		%40 = 	OpLoad %t_int %30
+		%41 = 	OpFunctionCall %t_float %f_add %39 %40
+			OpStore %23 %41
+			OpBranch %43
+		%47 = 	OpLabel
+		%44 = 	OpLoad %t_float %23
+		%45 = 	OpLoad %t_float %23
+		%46 = 	OpExtInst %t_float %ext Sqrt %45
+			OpStore %23 %46
+			OpBranch %43
+		%43 = 	OpLabel
+		%48 = 	OpPhi %t_float %41 %42 %46 %47
+			OpBranch %27
+		%27 = 	OpLabel
+		%33 = 	OpLoad %t_int %30
+		%34 = 	OpLoad %t_int %30
+		%35 = 	OpFAdd %t_int %34 %c_1
+			OpStore %30 %35
+			OpBranch %24
+		%28 = 	OpLabel
+		%49 = 	OpLoad %t_vec3 %6
+		%50 = 	OpVectorShuffle %t_float %49 %49 0
+		%51 = 	OpLoad %t_float %23
+			OpStore %50 %51
+		%52 = 	OpLoad %t_vec3 %6
+		%53 = 	OpVectorShuffle %t_vec2 %52 %52 1 2
+		%54 = 	OpTypePointer Function %t_vec2
+		%55 = 	OpVariable %54 Function
+			OpStore %55 %53
+		%61 = 	OpLoad %t_vec3 %6
+		%62 = 	OpVectorShuffle %t_vec3 %61 %61 1 1 2
+		%63 = 	OpTypePointer Function %t_vec3
+		%64 = 	OpVariable %63 Function
+			OpStore %64 %62
+			OpBranch %56
+		%56 = 	OpLabel
+			OpLoopMerge %60 %59 None
+			OpBranch %57
+		%57 = 	OpLabel
+		%65 = 	OpLoad %t_vec3 %64
+		%66 = 	OpVectorShuffle %t_float %65 %65 0
+		%67 = 	OpLoad %t_vec2 %55
+		%68 = 	OpVectorShuffle %t_float %67 %67 0
+		%69 = 	OpFAdd %t_float %66 %68
+		%70 = 	OpFOrdLessThan %t_bool %69 %c_10
+			OpBranchConditional %70 %58 %60
+		%58 = 	OpLabel
+		%76 = 	OpLoad %t_vec3 %64
+		%77 = 	OpVectorShuffle %t_float %76 %76 1
+		%78 = 	OpLoad %t_vec2 %55
+		%79 = 	OpVectorShuffle %t_float %78 %78 1
+		%80 = 	OpFMul %t_float %77 %79
+		%81 = 	OpFOrdLessThan %t_bool %80 %c_10
+			OpSelectionMerge %84 None
+			OpBranchConditional %81 %83 %84
+		%83 = 	OpLabel
+			OpBranch %60
+		%82 = 	OpLabel
+			OpBranch %84
+		%84 = 	OpLabel
+		%85 = 	OpLoad %t_vec3 %64
+		%86 = 	OpVectorShuffle %t_float %85 %85 1
+		%87 = 	OpLoad %t_vec2 %55
+		%88 = 	OpVectorShuffle %t_float %87 %87 2
+		%89 = 	OpFDiv %t_float %86 %88
+		%90 = 	OpFOrdGreaterThan %t_bool %89 %c_0
+			OpSelectionMerge %93 None
+			OpBranchConditional %90 %92 %93
+		%92 = 	OpLabel
+			OpBranch %59
+		%91 = 	OpLabel
+			OpBranch %93
+		%93 = 	OpLabel
+			OpBranch %59
+		%59 = 	OpLabel
+		%71 = 	OpLoad %t_vec2 %55
+		%72 = 	OpVectorShuffle %t_float %71 %71 1
+		%73 = 	OpLoad %t_vec2 %55
+		%74 = 	OpVectorShuffle %t_float %73 %73 1
+		%75 = 	OpFAdd %t_float %74 %c_1_0
+			OpStore %72 %75
+			OpBranch %56
+		%60 = 	OpLabel
 			OpReturn
 			OpFunctionEnd

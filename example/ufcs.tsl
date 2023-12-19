@@ -1,0 +1,11 @@
+out output : float;
+
+fn add(a : float, b : float) a + b
+
+fn main() -> void {
+    output = 2.0f           // 利用UFCS链式调用
+        .sqrt()
+        .sin()
+        .add(0.5f)          // 用户自定义函数
+        .clamp(0.0f, 1.0f)  // 内置函数
+}

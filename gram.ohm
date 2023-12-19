@@ -7,10 +7,14 @@ TypeDefine
     = "type" Type "=" "(" Parameters ")" ";" 
 
 Type
-    = name
+    = ~("fn::") name                            -- basic
+    | "fn::" ListOf<Type, "->">                 -- func
+
+ParameterType
+    = ListOf<Type, "|">
 
 Parameter
-    = name ":" Type
+    = name ":" ParameterType
 
 Parameters
     = ListOf<Parameter, ",">
@@ -49,6 +53,7 @@ keyword
     | "break"
     | "continue"
     | "return"
+    | "as"
 
 name
     = ~keyword (letter | "_") (alnum | "_")*
@@ -73,12 +78,13 @@ PrimaryExpression
     | "(" ListOf<Expression, ","> ")"                                       -- tupleState
     | "[" ListOf<Expression, ","> "]"                                       -- arrayState
     | Statement                                                             -- statement
+    | "(" Parameters ")" "=>" Expression                                    -- lambdaExpr
 
 PropertyExpression
-    = PrimaryExpression "[" Expression "]"                                  -- getAddress
+    = PropertyExpression "[" Expression "]"                                 -- getAddress
     | name "(" ListOf<Expression, ","> ")"                                  -- callFunc
-    | PrimaryExpression "." name "(" ListOf<Expression, ","> ")"            -- ufcs
-    | PrimaryExpression "." name                                            -- getMember
+    | PropertyExpression "." name "(" ListOf<Expression, ","> ")"           -- ufcs
+    | PropertyExpression "." name                                           -- getMember
     | PrimaryExpression                                                     -- derive
     
 UnaryExpression
@@ -97,8 +103,12 @@ BitBinaryExpression
     = BitBinaryExpression ("&"|"|"|"^") AdditiveBinaryExpression                          -- compose
     | AdditiveBinaryExpression                                                            -- derive
 
+CustomBinaryExpression
+    = CustomBinaryExpression (".."|"as") BitBinaryExpression                              -- compose
+    | BitBinaryExpression                                                                 -- derive
+
 CompareBinaryExpression
-    = CompareBinaryExpression ("=="|"!="|"<="|">="|"<"|">") BitBinaryExpression           -- compose
+    = CompareBinaryExpression ("=="|"!="|"<="|">="|"<"|">") CustomBinaryExpression        -- compose
     | BitBinaryExpression                                                                 -- derive
 
 LogicBinaryExpression

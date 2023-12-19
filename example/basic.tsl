@@ -1,0 +1,30 @@
+type Sphere = (p : vec3, radius : float);
+type Ray = (o : vec3, d : vec3);
+
+in spheres : Sphere[8];
+in ray : Ray;
+out pos : vec3;
+
+fn sqr(x : any) { x * x }
+
+fn intersect(s : Sphere, r : Ray) -> float {
+    let d = normalize(r.d)
+    let op = s.p - r.o
+    let b = dot(op, d)
+    let a = sqr(s.radius) - sqr(op) + sqr(b)
+    if (a < 0) return 0f else a = sqrt(a)
+    if ((let t = b - a) >= 0) return t
+    if ((t = b + a) >= 0) return t
+    return 0f
+}
+
+fn main() -> void {
+    let min_dis = 1e9f
+    let slice = spheres[0..4]
+    for (let i = 0; i < slice.length(); i = i + 1) {
+        let sphere = slice[i]
+        let dis = sphere.intersect(ray)
+        if (dis > 0) min_dis = min(min_dis, dis)
+    }
+    pos = ray.o + normalize(ray.d) * min_dis
+}

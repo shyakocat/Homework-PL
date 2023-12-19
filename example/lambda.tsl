@@ -1,0 +1,58 @@
+out output : float[8];
+
+// any类型和|多个类型仅在函数参数中可用
+// 编译器会根据使用情况直接内联，类似于宏
+fn map(xs : any, f : any) {                         
+    for (let i = 0; i < xs.length(); i = i + 1) 
+        xs[i] = f(xs[i])
+    return xs
+}
+
+/*
+本质上
+{                         
+    for (let i = 0; i < length(xs); i = i + 1) 
+        __setvalue__(xs, i, __call__(f, __getvalue__(xs, i)))
+    return xs
+}
+*/
+
+fn sqr(x : float | int) x * x
+
+// 仿函数的写法
+type ReLU = ();
+fn __call__(ref self : ReLU, x : float) { max(x, 0f) }
+
+
+// ref对标于glsl的inout，实现为调用函数后修改符号表中对应变量的索引
+// 使用ref等价于p1 = a; p2 = b; swap(p1, p2); a = p1; b = p2;
+fn swap(ref a : int, ref b : int) -> void {
+    let t = a; a = b; b = t;
+}
+
+
+fn main() {
+    var arr = [1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f]  // 类型为float[8]
+    let c = 0.1f
+    arr = map(arr, sqrt)                        // 内置函数
+    arr = map(arr, sqr)                         // 自定义函数
+    arr = map(arr, (x) => x * 2)                // 匿名函数，入参为any
+    arr = map(arr, (x : float) => { exp(x) + c }) // 闭包值默认拷贝
+    arr = map(arr, ReLU)                        // 仿函数
+    let _f = sqr                                // 类型不确定，等价于函数别名
+    var f : fn::float->float->float = sqr       // 类型确定把函数赋值给变量
+    // 编译器将所有该类型的函数作为函数池编号，用switch进行运行时函数调用
+    arr = map(arr, f)
+    output = arr
+}
+
+/*
+本质上
+type fn::float->float->float = (id : int);
+fn __call__(self : fn::float->float->float, _1 : float, _2 : float) -> float {
+    if (self.id == 1) f1(_1, _2) else 
+    if (self.id == 2) f2(_1, _2) else
+    ... else
+    f10(_1, _2)
+}
+*/

@@ -2,42 +2,35 @@ let { Parse, Formatter } = require("./spv");
 const fs = require("fs");
 
 s = `
-type Info = (image_size : ivec2);
 
-uniform params : Info;
-var pic : tex2d;
+in MVP : mat3;
+in Pos : vec3;
+out Out : vec3;
 
-fn main(gid : uvec3, lid: uvec3) {
-    uv : ivec2 = gid.xy
-    if (uv.x >= params.img_size.x || uv.y >= params.img_size.y) {
-        return
-    }
-
-    temp = textureLoad(src_pic, uv, 0) * WEIGHT[0]
-    uvMax = params.img_size - 1
-    for (i = 1; i <= 4; ++i) {
-      uvOffset = vec2<i32>(3, 0) * i
-      temp += textureLoad(src_pic, (uv + uvOffset).clamp(0, uvMax), 0) * WEIGHT[i]
-      temp += textureLoad(src_pic, (uv - uvOffset).clamp(0, uvMax), 0) * WEIGHT[i]
-    }
-    textureStore(swp_pic, uv, temp)
+fn add(a : float, b : float) -> float {
+  return a + b
 }
 
-fn add(a : int, b : int) a+b
-`;
+fn main() {
+  Out = Pos * MVP;
 
-s = `
+  let f : fn::int->int = (x:int) => x*2
 
-in a : mat3;
-in b : vec3;
-out c : vec3;
+  let tmp : float = 3.0f;
+  for (let i : int = 1; i <= 4; i = i + 1) {
+    if (i == 2) tmp = tmp.add(i)
+    else tmp = sqrt(tmp)
+  }
 
-fn func(x : float) -> float {
-  return sin(x)
-}
+  Out.x = tmp
 
-fn main() -> void {
-  c.x = func(b.x);
+  let v : vec2 = Out.yz;
+    
+  for (let u : vec3 = Out.yyz; u.x + v.x < 10; v.y = v.y + 1.0f) {
+    if (u.y * v.y < 10) break;
+    if (u.y / v.z > 0) continue;
+  }
+
 }
 
 `;

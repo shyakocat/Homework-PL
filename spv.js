@@ -211,8 +211,17 @@ let actions = {
     );
     return code;
   },
-  Type(name) {
-    return name.parse();
+  Type(type) {
+    return type.parse()
+  },
+  Type_basic(name) {
+    return name.parse()
+  },
+  Type_func(_fn, types) {
+    return this.sourceString
+  },
+  ParameterType(types) {
+    return types.asIteration().children.map((t) => t.parse())[0];
   },
   Parameter(name, _c, type) {
     return [name.parse(), type.parse()];
@@ -324,6 +333,12 @@ let actions = {
     return e.parse();
   },
   BitBinaryExpression_derive(e) {
+    return e.parse();
+  },
+  CustomBinaryExpression(e) {
+    return e.parse();
+  },
+  CustomBinaryExpression_derive(e) {
     return e.parse();
   },
   CompareBinaryExpression(e) {
@@ -572,6 +587,11 @@ let actions = {
   PrimaryExpression_statement(s) {
     return s.parse();
   },
+  PrimaryExpression_lambdaExpr(_l, params, _r, _ar, e) {
+    let fn = ""
+    let ps = params.parse()
+    // TODO
+  },
 
   PropertyExpression_getMember(e, _dot, m) {
     let expr_v = e.parse();
@@ -693,10 +713,10 @@ let actions = {
       op === "*"
         ? "OpFMul"
         : op === "/"
-        ? "OpFDiv"
-        : op === "%"
-        ? "OpFMod"
-        : null;
+          ? "OpFDiv"
+          : op === "%"
+            ? "OpFMod"
+            : null;
     if (op === "*" && e1.typeName === "vec3" && e2.typeName === "mat3") {
       instr = "OpVectorTimesMatrix";
       expr_v.typeName = "vec3";
@@ -741,16 +761,16 @@ let actions = {
       op === "=="
         ? "OpFOrdEqual"
         : op === "!="
-        ? "OpFOrdNotEqual"
-        : op === "<"
-        ? "OpFOrdLessThan"
-        : op === ">"
-        ? "OpFOrdGreaterThan"
-        : op === "<="
-        ? "OpFOrdLessThanEqual"
-        : op === ">="
-        ? "OpFOrdGreaterThanEqual"
-        : null;
+          ? "OpFOrdNotEqual"
+          : op === "<"
+            ? "OpFOrdLessThan"
+            : op === ">"
+              ? "OpFOrdGreaterThan"
+              : op === "<="
+                ? "OpFOrdLessThanEqual"
+                : op === ">="
+                  ? "OpFOrdGreaterThanEqual"
+                  : null;
     console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`

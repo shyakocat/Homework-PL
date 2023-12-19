@@ -1,0 +1,32 @@
+type BRDF<T> = (
+    n : T[3],
+    roughness : T,
+    metalness : T,
+    F0 : T
+);
+
+fn sqr<T>(x : T) -> T { x * x } // 本质为any，但会检查输入输出类型是否一致
+
+fn GGX<T, Q>(m : T, wi : Q, wo : Q) where 
+    T = BRDF<float> | BRDF<double>, 
+    Q = float[3] | double[3]
+    // 其中三个参数本质为any，但调用是否合法会检查
+{ ... }
+
+fn FSchlick(m : any, wi : any, wo : any) { ... }
+
+// 因为实现复杂度，目前支持的函数泛型不能嵌套
+// 接口不能用泛型
+interface BSDF = BRDF<float> (
+    GGX(self, float[3], float[3]),
+    FSchlick(self, float[3], float[3])
+);
+
+fn Radiance<T, Q>(m : T, wi : Q, wo : Q) where T : BSDF
+{ ... }
+
+fn main() {
+    m : BRDF<float> = (...)
+    let (wi, wo) = ([...], [...])   // 解构赋值
+    float L = Radiance(m, wi, wo)
+}

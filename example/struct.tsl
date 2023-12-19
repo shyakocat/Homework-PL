@@ -1,0 +1,19 @@
+type f32 = float;                           // 别名
+type Quaternion = f32[4];
+type Func1 = fn::int->int->int;             // 函数类型
+
+type Complex = (float real, float imag);    // 结构体
+type AABB = (vec2 min, vec2 max);
+
+type Object = Complex, AABB ();             // 组合无相同成员名的结构体
+
+type Solution<T,Q> = (T planA, Q planB);    // 泛型
+
+
+fn main() {
+    let q : Quaternion = [1.0f, 1.0f, 1.0f, 1.0f]
+    let c : Complex = (0.5f, 0.5f)
+    let box : AABB = ([0.0f, 0.0f], [1.0f, 1.0f])
+    let o : Object = (0.5f, 0.5f, [0.0f, 0.0f], [1.0f, 1.0f])
+    let c2 = o as Complex                   // 提取结构体中所有对应成员
+}

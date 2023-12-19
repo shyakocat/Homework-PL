@@ -1,11 +1,15 @@
 #version 450
 
-layout(location = 1) out int sm;
+layout(location = 1) out float val;
+
+void swap(inout float a, inout float b) {
+    float t = a; a = b; b = t;
+}
 
 void main()
 {
-    sm = 0;
-    for (int i = 1; i <= 10; ++i)
-        sm += i < 5 ? i : i * i;
+    float a = 1.0, b = 2.0;
+    swap(a, b);
+    val = b;
 }
 
