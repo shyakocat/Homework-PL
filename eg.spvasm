@@ -1,91 +1,102 @@
 ; SPIR-V
 ; Version: 1.0
 ; Generator: Google Shaderc over Glslang; 11
-; Bound: 60
+; Bound: 69
 ; Schema: 0
                OpCapability Shader
           %1 = OpExtInstImport "GLSL.std.450"
                OpMemoryModel Logical GLSL450
-               OpEntryPoint Vertex %main "main" %c %b %a
+               OpEntryPoint Vertex %main "main" %a %c %b
                OpSource GLSL 450
                OpSourceExtension "GL_GOOGLE_cpp_style_line_directive"
                OpSourceExtension "GL_GOOGLE_include_directive"
                OpName %main "main"
                OpName %func_f1_ "func(f1;"
                OpName %x "x"
+               OpName %t "t"
+               OpName %a "a"
                OpName %c "c"
                OpName %b "b"
                OpName %param "param"
                OpName %i "i"
-               OpName %a "a"
+               OpDecorate %a Location 0
                OpDecorate %c Location 0
                OpDecorate %b Location 5
-               OpDecorate %a Location 0
        %void = OpTypeVoid
           %3 = OpTypeFunction %void
       %float = OpTypeFloat 32
 %_ptr_Function_float = OpTypePointer Function %float
           %8 = OpTypeFunction %float %_ptr_Function_float
     %v3float = OpTypeVector %float 3
+%mat3v3float = OpTypeMatrix %v3float 3
+%_ptr_Input_mat3v3float = OpTypePointer Input %mat3v3float
+          %a = OpVariable %_ptr_Input_mat3v3float Input
+        %int = OpTypeInt 32 1
+      %int_0 = OpConstant %int 0
+       %uint = OpTypeInt 32 0
+     %uint_0 = OpConstant %uint 0
+%_ptr_Input_float = OpTypePointer Input %float
+    %float_0 = OpConstant %float 0
+       %bool = OpTypeBool
+   %float_n1 = OpConstant %float -1
+    %float_1 = OpConstant %float 1
 %_ptr_Output_v3float = OpTypePointer Output %v3float
           %c = OpVariable %_ptr_Output_v3float Output
 %_ptr_Input_v3float = OpTypePointer Input %v3float
           %b = OpVariable %_ptr_Input_v3float Input
-       %uint = OpTypeInt 32 0
-     %uint_0 = OpConstant %uint 0
-%_ptr_Input_float = OpTypePointer Input %float
 %_ptr_Output_float = OpTypePointer Output %float
-        %int = OpTypeInt 32 1
 %_ptr_Function_int = OpTypePointer Function %int
       %int_1 = OpConstant %int 1
      %int_10 = OpConstant %int 10
-       %bool = OpTypeBool
       %int_5 = OpConstant %int 5
       %int_6 = OpConstant %int 6
-%mat3v3float = OpTypeMatrix %v3float 3
-%_ptr_Input_mat3v3float = OpTypePointer Input %mat3v3float
-          %a = OpVariable %_ptr_Input_mat3v3float Input
        %main = OpFunction %void None %3
           %5 = OpLabel
+          %t = OpVariable %_ptr_Function_float Function
       %param = OpVariable %_ptr_Function_float Function
           %i = OpVariable %_ptr_Function_int Function
-         %25 = OpAccessChain %_ptr_Input_float %b %uint_0
-         %26 = OpLoad %float %25
-               OpStore %param %26
-         %27 = OpFunctionCall %float %func_f1_ %param
-         %29 = OpAccessChain %_ptr_Output_float %c %uint_0
-               OpStore %29 %27
+         %26 = OpAccessChain %_ptr_Input_float %a %int_0 %uint_0
+         %27 = OpLoad %float %26
+         %30 = OpFOrdLessThan %bool %27 %float_0
+         %33 = OpSelect %float %30 %float_n1 %float_1
+               OpStore %t %33
+         %39 = OpAccessChain %_ptr_Input_float %b %uint_0
+         %40 = OpLoad %float %39
+               OpStore %param %40
+         %41 = OpFunctionCall %float %func_f1_ %param
+         %43 = OpAccessChain %_ptr_Output_float %c %uint_0
+               OpStore %43 %41
                OpStore %i %int_1
-               OpBranch %34
-         %34 = OpLabel
-               OpLoopMerge %36 %37 None
-               OpBranch %38
-         %38 = OpLabel
-         %39 = OpLoad %int %i
-         %42 = OpSLessThan %bool %39 %int_10
-               OpBranchConditional %42 %35 %36
-         %35 = OpLabel
-         %43 = OpLoad %int %i
-         %45 = OpIEqual %bool %43 %int_5
-               OpSelectionMerge %47 None
-               OpBranchConditional %45 %46 %47
-         %46 = OpLabel
-               OpBranch %37
+               OpBranch %47
          %47 = OpLabel
-         %49 = OpLoad %int %i
-         %51 = OpIEqual %bool %49 %int_6
-               OpSelectionMerge %53 None
-               OpBranchConditional %51 %52 %53
-         %52 = OpLabel
-               OpBranch %36
-         %53 = OpLabel
-               OpBranch %37
-         %37 = OpLabel
+               OpLoopMerge %49 %50 None
+               OpBranch %51
+         %51 = OpLabel
+         %52 = OpLoad %int %i
+         %54 = OpSLessThan %bool %52 %int_10
+               OpBranchConditional %54 %48 %49
+         %48 = OpLabel
          %55 = OpLoad %int %i
-         %56 = OpIAdd %int %55 %int_1
-               OpStore %i %56
-               OpBranch %34
-         %36 = OpLabel
+         %57 = OpIEqual %bool %55 %int_5
+               OpSelectionMerge %59 None
+               OpBranchConditional %57 %58 %59
+         %58 = OpLabel
+               OpBranch %50
+         %59 = OpLabel
+         %61 = OpLoad %int %i
+         %63 = OpIEqual %bool %61 %int_6
+               OpSelectionMerge %65 None
+               OpBranchConditional %63 %64 %65
+         %64 = OpLabel
+               OpBranch %49
+         %65 = OpLabel
+               OpBranch %50
+         %50 = OpLabel
+         %67 = OpLoad %int %i
+         %68 = OpIAdd %int %67 %int_1
+               OpStore %i %68
+               OpBranch %47
+         %49 = OpLabel
                OpReturn
                OpFunctionEnd
    %func_f1_ = OpFunction %float None %8

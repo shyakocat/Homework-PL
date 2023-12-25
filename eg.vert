@@ -10,6 +10,7 @@ float func(float x) {
 }
 
 void main() {
+    float t = a[0][0] < 0 ? -1.0f : 1.0f;
     c.x = func(b.x);
     for(int i = 1; i < 10; ++i) {
         if(i == 5)

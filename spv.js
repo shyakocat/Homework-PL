@@ -106,6 +106,29 @@ function SolveCallFunction(func, params) {
       };
       return expr_v;
     }
+    if (params[0] && params[0].typeName === "vec3" &&
+      params[1] && params[1].isLiteral) {
+      let cur = st.getNext();
+      let tp = st.getType(func);
+      let tp_float = st.getType("float");
+      let v = params[0].value
+      let vx = st.getNext();
+      let vy = st.getNext();
+      let vz = st.getNext();
+      let expr_v = {
+        code: [
+          ...params[0].code,
+          `${vx} = OpCompositeExtract ${tp_float} ${v} 0`,
+          `${vy} = OpCompositeExtract ${tp_float} ${v} 1`,
+          `${vz} = OpCompositeExtract ${tp_float} ${v} 2`,
+          `${cur} = OpCompositeConstruct ${tp} ${vx} ${vy} ${vz} ${params[1].value}`
+        ],
+        typeName: func,
+        type: tp,
+        value: cur,
+      };
+      return expr_v;
+    }
   }
 
   const extTable = {
@@ -592,10 +615,15 @@ let actions = {
     let ps = params.parse()
     // TODO
   },
+  PrimaryExpression_arrayState(_l, xs, _r) {
+    let es = xs.asIteration().children.map((x) => x.parse());
+    return SolveCallFunction(`vec${es.length}`, es);
+  },
 
   PropertyExpression_getMember(e, _dot, m) {
     let expr_v = e.parse();
     let member = m.parse();
+    // vec
     if (expr_v.typeName.search(/vec[234]/) !== -1) {
       if (
         member.length >= 1 &&
@@ -616,6 +644,27 @@ let actions = {
         return expr_v;
       }
     }
+
+    // 自定义类型
+    let et = st.ttable[expr_v.typeName]
+    if (et) {
+      let ps = et.params;
+      let pidx = ps.findIndex(x => x[0] === member);
+      if (pidx > -1) {
+        let p = ps[pidx]
+        expr_v.typeName = p[1]
+        expr_v.type = st.getType(expr_v.typeName)
+        let cur = st.getNext()
+        let v = expr_v.value
+        expr_v.code.push(
+          `${cur} = OpAccessChain ${expr_v.type} ${v} ${st.getConst(pidx.toString())}`
+        )
+        expr_v.value = cur
+        if (expr_v.lvalue) expr_v.lvalue = cur;
+        return expr_v
+      }
+    }
+
     return SolveCallFunction(member, [expr_v]);
     throw `invalid get member ${member}`;
   },
@@ -722,6 +771,11 @@ let actions = {
       expr_v.typeName = "vec3";
       expr_v.type = st.getType(expr_v.typeName);
     }
+    if (op === "*" && e1.typeName === "mat4" && e2.typeName === "vec4") {
+      instr = "OpMatrixTimesVector";
+      expr_v.typeName = "vec4";
+      expr_v.type = st.getType(expr_v.typeName);
+    }
     console.assert(instr !== null, `unknown op ${op}`);
     expr_v.code.push(
       `${cur} = ${instr} ${expr_v.type} ${e1.value} ${e2.value}`
@@ -800,7 +854,7 @@ let actions = {
     }
     return expr_v;
   },
-  AssignExpression_assignHint(_dc, name, _s, type, _e, expr) {
+  AssignExpression_assignHint(_dc, name, _c, type, _e, expr) {
     let v = name.parse();
     let tp = type.parse();
     let expr_v = expr.parse();
@@ -819,6 +873,46 @@ let actions = {
     );
     expr_v.value = cur;
     return expr_v;
+  },
+  AssignExpression_assignNope(_dc, name, _c, type, _s) {
+    let v = name.parse();
+    let tp = type.parse();
+    if (st.getVar(v, true) !== null) {
+      throw `redefine variable ${v}`;
+    }
+    let ptr = st.getNext();
+    let cur = st.setVar(v, "func", tp);
+    let expr_v = {}
+    expr_v.typeName = tp;
+    expr_v.type = st.getType(expr_v.typeName);
+    expr_v.code = [
+      `${ptr} = OpTypePointer Function ${expr_v.type}`,
+      `${cur} = OpVariable ${ptr} Function`,
+    ];
+    expr_v.value = cur;
+    return expr_v;
+  },
+
+
+  TernaryExpression_compose(cond, _q, e1, _c, e2) {
+    cond = cond.parse()
+    e1 = e1.parse()
+    e2 = e2.parse()
+    console.assert(e1.typeName === e2.typeName,
+      `ternary expression but type not same, got ${e1.typeName} and ${e2.typeName}`)
+    let cur = st.getNext()
+    expr_v = {
+      code: [
+        ...cond.code,
+        ...e1.code,
+        ...e2.code,
+        `${cur} = OpSelect ${e1.type} ${cond.value} ${e1.value} ${e2.value}`
+      ],
+      typeName: e1.typeName,
+      type: e1.type,
+      value: cur,
+    }
+    return expr_v
   },
 };
 

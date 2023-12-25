@@ -14,7 +14,7 @@ fn add(a : float, b : float) -> float {
 fn main() {
   Out = Pos * MVP;
 
-  let f : fn::int->int = (x:int) => x*2
+  //let f : fn::int->int = (x:int) => x*2
 
   let tmp : float = 3.0f;
   for (let i : int = 1; i <= 4; i = i + 1) {
@@ -32,9 +32,7 @@ fn main() {
   }
 
 }
-
-`;
-
+`
 
 ret = Parse(s);
 //console.log(ret);

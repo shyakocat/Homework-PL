@@ -1,0 +1,27 @@
+in W : mat4;
+in VP : mat4;
+in ShadowColor : vec4;
+
+
+type VSInput = (Pos : vec3);
+type VSOutput = (Position : vec4, Pos : vec4);
+
+fn VSMain(input : VSInput) -> VSOutput {
+  let vsOut : VSOutput;
+  vsOut.Pos = W * vec4(input.Pos, 1.0f);
+  vsOut.Pos.y = 0.0f;
+  vsOut.Pos = VP * vsOut.Pos;
+  vsOut.Position = vsOut.Pos;
+  return vsOut;
+}
+
+fn PSMain(vsOut : VSOutput) -> vec4 /* COLOR */ {
+  //return ShadowColor
+  return ((vsOut.Pos.x + vsOut.Pos.y) % 2.0f < 1.0f) ? ShadowColor : [1.0f, 1.0f, 1.0f, 1.0f];
+}
+
+fn main() -> void {
+  let vsIn : VSInput;
+  let vsOut : VSOutput = VSMain(vsIn);
+  PSMain(vsOut);
+}

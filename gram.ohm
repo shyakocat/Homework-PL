@@ -122,6 +122,7 @@ TernaryExpression
 AssignExpression
     = TernaryExpression ("="|"+="|"-="|"*="|"/="|"^="|"|="|"&=") AssignExpression         -- assign
     | ("var"|"let")? name ":" Type "=" AssignExpression                                   -- assignHint
+    | ("var"|"let") name ":" Type ";"                                                     -- assignNope
     | TernaryExpression                                                                   -- derive
 
 space

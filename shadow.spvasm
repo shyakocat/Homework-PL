@@ -1,0 +1,131 @@
+; SPIR-V
+; Version: 1.0
+; Generator: Google Shaderc over Glslang; 11
+; Bound: 88
+; Schema: 0
+               OpCapability Shader
+          %1 = OpExtInstImport "GLSL.std.450"
+               OpMemoryModel Logical GLSL450
+               OpEntryPoint Fragment %main "main" %W %VP %ShadowColor
+               OpExecutionMode %main OriginUpperLeft
+               OpSource GLSL 450
+               OpSourceExtension "GL_GOOGLE_cpp_style_line_directive"
+               OpSourceExtension "GL_GOOGLE_include_directive"
+               OpName %main "main"
+               OpName %VSInput "VSInput"
+               OpMemberName %VSInput 0 "Pos"
+               OpName %VSOutput "VSOutput"
+               OpMemberName %VSOutput 0 "Position"
+               OpMemberName %VSOutput 1 "Pos"
+               OpName %VSMain_struct_VSInput_vf31_ "VSMain(struct-VSInput-vf31;"
+               OpName %vsIn "vsIn"
+               OpName %PSMain_struct_VSOutput_vf4_vf41_ "PSMain(struct-VSOutput-vf4-vf41;"
+               OpName %vsOut "vsOut"
+               OpName %vsOut_0 "vsOut"
+               OpName %W "W"
+               OpName %VP "VP"
+               OpName %t "t"
+               OpName %ShadowColor "ShadowColor"
+               OpName %vsOut_1 "vsOut"
+               OpName %vsIn_0 "vsIn"
+               OpName %param "param"
+               OpName %param_0 "param"
+               OpDecorate %W Location 0
+               OpDecorate %VP Location 17
+               OpDecorate %ShadowColor Location 33
+       %void = OpTypeVoid
+          %3 = OpTypeFunction %void
+      %float = OpTypeFloat 32
+    %v3float = OpTypeVector %float 3
+    %VSInput = OpTypeStruct %v3float
+%_ptr_Function_VSInput = OpTypePointer Function %VSInput
+    %v4float = OpTypeVector %float 4
+   %VSOutput = OpTypeStruct %v4float %v4float
+         %12 = OpTypeFunction %VSOutput %_ptr_Function_VSInput
+%_ptr_Function_VSOutput = OpTypePointer Function %VSOutput
+         %17 = OpTypeFunction %v4float %_ptr_Function_VSOutput
+        %int = OpTypeInt 32 1
+      %int_0 = OpConstant %int 0
+%mat4v4float = OpTypeMatrix %v4float 4
+%_ptr_Input_mat4v4float = OpTypePointer Input %mat4v4float
+          %W = OpVariable %_ptr_Input_mat4v4float Input
+%_ptr_Function_v3float = OpTypePointer Function %v3float
+    %float_1 = OpConstant %float 1
+%_ptr_Function_v4float = OpTypePointer Function %v4float
+    %float_0 = OpConstant %float 0
+       %uint = OpTypeInt 32 0
+     %uint_1 = OpConstant %uint 1
+%_ptr_Function_float = OpTypePointer Function %float
+         %VP = OpVariable %_ptr_Input_mat4v4float Input
+      %int_1 = OpConstant %int 1
+       %bool = OpTypeBool
+%_ptr_Function_bool = OpTypePointer Function %bool
+     %uint_0 = OpConstant %uint 0
+     %uint_2 = OpConstant %uint 2
+    %float_2 = OpConstant %float 2
+%_ptr_Input_v4float = OpTypePointer Input %v4float
+%ShadowColor = OpVariable %_ptr_Input_v4float Input
+         %74 = OpConstantComposite %v4float %float_0 %float_0 %float_0 %float_0
+     %v4bool = OpTypeVector %bool 4
+       %main = OpFunction %void None %3
+          %5 = OpLabel
+    %vsOut_1 = OpVariable %_ptr_Function_VSOutput Function
+     %vsIn_0 = OpVariable %_ptr_Function_VSInput Function
+      %param = OpVariable %_ptr_Function_VSInput Function
+    %param_0 = OpVariable %_ptr_Function_VSOutput Function
+         %83 = OpLoad %VSInput %vsIn_0
+               OpStore %param %83
+         %84 = OpFunctionCall %VSOutput %VSMain_struct_VSInput_vf31_ %param
+               OpStore %vsOut_1 %84
+         %86 = OpLoad %VSOutput %vsOut_1
+               OpStore %param_0 %86
+         %87 = OpFunctionCall %v4float %PSMain_struct_VSOutput_vf4_vf41_ %param_0
+               OpReturn
+               OpFunctionEnd
+%VSMain_struct_VSInput_vf31_ = OpFunction %VSOutput None %12
+       %vsIn = OpFunctionParameter %_ptr_Function_VSInput
+         %15 = OpLabel
+    %vsOut_0 = OpVariable %_ptr_Function_VSOutput Function
+         %27 = OpLoad %mat4v4float %W
+         %29 = OpAccessChain %_ptr_Function_v3float %vsIn %int_0
+         %30 = OpLoad %v3float %29
+         %32 = OpCompositeExtract %float %30 0
+         %33 = OpCompositeExtract %float %30 1
+         %34 = OpCompositeExtract %float %30 2
+         %35 = OpCompositeConstruct %v4float %32 %33 %34 %float_1
+         %36 = OpMatrixTimesVector %v4float %27 %35
+         %38 = OpAccessChain %_ptr_Function_v4float %vsOut_0 %int_0
+               OpStore %38 %36
+         %43 = OpAccessChain %_ptr_Function_float %vsOut_0 %int_0 %uint_1
+               OpStore %43 %float_0
+         %45 = OpLoad %mat4v4float %VP
+         %46 = OpAccessChain %_ptr_Function_v4float %vsOut_0 %int_0
+         %47 = OpLoad %v4float %46
+         %48 = OpMatrixTimesVector %v4float %45 %47
+         %49 = OpAccessChain %_ptr_Function_v4float %vsOut_0 %int_0
+               OpStore %49 %48
+         %51 = OpAccessChain %_ptr_Function_v4float %vsOut_0 %int_0
+         %52 = OpLoad %v4float %51
+         %53 = OpAccessChain %_ptr_Function_v4float %vsOut_0 %int_1
+               OpStore %53 %52
+         %54 = OpLoad %VSOutput %vsOut_0
+               OpReturnValue %54
+               OpFunctionEnd
+%PSMain_struct_VSOutput_vf4_vf41_ = OpFunction %v4float None %17
+      %vsOut = OpFunctionParameter %_ptr_Function_VSOutput
+         %20 = OpLabel
+          %t = OpVariable %_ptr_Function_bool Function
+         %61 = OpAccessChain %_ptr_Function_float %vsOut %int_1 %uint_0
+         %62 = OpLoad %float %61
+         %64 = OpAccessChain %_ptr_Function_float %vsOut %int_1 %uint_2
+         %65 = OpLoad %float %64
+         %66 = OpFAdd %float %62 %65
+         %68 = OpFMod %float %66 %float_2
+         %69 = OpFOrdLessThan %bool %68 %float_1
+               OpStore %t %69
+         %70 = OpLoad %bool %t
+         %73 = OpLoad %v4float %ShadowColor
+         %76 = OpCompositeConstruct %v4bool %70 %70 %70 %70
+         %77 = OpSelect %v4float %76 %73 %74
+               OpReturnValue %77
+               OpFunctionEnd

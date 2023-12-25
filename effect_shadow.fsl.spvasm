@@ -1,0 +1,105 @@
+			OpCapability Shader
+			OpMemoryModel Logical GLSL450
+		%ext = 	OpExtInstImport "GLSL.std.450"
+			OpEntryPoint Vertex %f_main "main" 
+		%t_float = 	OpTypeFloat 32
+		%t_vec4 = 	OpTypeVector %t_float 4
+		%t_mat4 = 	OpTypeMatrix %t_vec4 4
+		%t_vec3 = 	OpTypeVector %t_float 3
+		%t_int = 	OpTypeInt 32 1
+		%t_void = 	OpTypeVoid
+		%t_bool = 	OpTypeBool
+			OpName %t_VSInput "VSInput"
+			OpName %t_VSOutput "VSOutput"
+		%c_1 = 	OpConstant %t_int 1
+		%c_0 = 	OpConstant %t_int 0
+		%c_1_0 = 	OpConstant %t_float 1.0
+		%c_0_0 = 	OpConstant %t_float 0.0
+		%c_2_0 = 	OpConstant %t_float 2.0
+			OpName %2 "W"
+			OpName %4 "VP"
+			OpName %6 "ShadowColor"
+			OpName %f_VSMain "VSMain"
+			OpName %f_PSMain "PSMain"
+			OpName %f_main "main"
+		%1 = 	OpTypePointer Input %t_mat4
+		%2 = 	OpVariable %1 Input
+		%3 = 	OpTypePointer Input %t_mat4
+		%4 = 	OpVariable %3 Input
+		%5 = 	OpTypePointer Input %t_vec4
+		%6 = 	OpVariable %5 Input
+			OpMemberName %t_VSInput 0 "Pos"
+		%t_VSInput = 	OpTypeStruct %t_vec3
+			OpMemberName %t_VSOutput 0 "Position"
+			OpMemberName %t_VSOutput 1 "Pos"
+		%t_VSOutput = 	OpTypeStruct %t_vec4 %t_vec4
+		%7 = 	OpTypeFunction %t_VSOutput %t_VSInput
+		%f_VSMain = 	OpFunction %t_VSOutput None %7
+		%8 = 	OpTypePointer Function %t_VSInput
+		%9 = 	OpFunctionParameter %8
+		%10 = 	OpLabel
+		%11 = 	OpTypePointer Function %t_VSOutput
+		%12 = 	OpVariable %11 Function
+		%13 = 	OpLoad %t_VSOutput %12
+		%14 = 	OpAccessChain %t_vec4 %13 %c_1
+		%15 = 	OpLoad %t_mat4 %2
+		%16 = 	OpLoad %t_VSInput %9
+		%17 = 	OpAccessChain %t_vec3 %16 %c_0
+		%19 = 	OpCompositeExtract %t_float %17 0
+		%20 = 	OpCompositeExtract %t_float %17 1
+		%21 = 	OpCompositeExtract %t_float %17 2
+		%18 = 	OpCompositeConstruct %t_vec4 %19 %20 %21 %c_1_0
+		%22 = 	OpMatrixTimesVector %t_vec4 %15 %18
+			OpStore %14 %22
+		%23 = 	OpLoad %t_VSOutput %12
+		%24 = 	OpAccessChain %t_vec4 %23 %c_1
+		%25 = 	OpVectorShuffle %t_float %24 %24 1
+			OpStore %25 %c_0_0
+		%26 = 	OpLoad %t_VSOutput %12
+		%27 = 	OpAccessChain %t_vec4 %26 %c_1
+		%28 = 	OpLoad %t_mat4 %4
+		%29 = 	OpLoad %t_VSOutput %12
+		%30 = 	OpAccessChain %t_vec4 %29 %c_1
+		%31 = 	OpMatrixTimesVector %t_vec4 %28 %30
+			OpStore %27 %31
+		%32 = 	OpLoad %t_VSOutput %12
+		%33 = 	OpAccessChain %t_vec4 %32 %c_0
+		%34 = 	OpLoad %t_VSOutput %12
+		%35 = 	OpAccessChain %t_vec4 %34 %c_1
+			OpStore %33 %35
+		%36 = 	OpLoad %t_VSOutput %12
+			OpReturnValue %36
+			OpFunctionEnd
+		%37 = 	OpTypeFunction %t_vec4 %t_VSOutput
+		%f_PSMain = 	OpFunction %t_vec4 None %37
+		%38 = 	OpTypePointer Function %t_VSOutput
+		%39 = 	OpFunctionParameter %38
+		%40 = 	OpLabel
+		%41 = 	OpLoad %t_VSOutput %39
+		%42 = 	OpAccessChain %t_vec4 %41 %c_1
+		%43 = 	OpVectorShuffle %t_float %42 %42 0
+		%44 = 	OpLoad %t_VSOutput %39
+		%45 = 	OpAccessChain %t_vec4 %44 %c_1
+		%46 = 	OpVectorShuffle %t_float %45 %45 1
+		%47 = 	OpFAdd %t_float %43 %46
+		%48 = 	OpFMod %t_float %47 %c_2_0
+		%49 = 	OpFOrdLessThan %t_bool %48 %c_1_0
+		%50 = 	OpLoad %t_vec4 %6
+		%51 = 	OpConstantComposite %t_vec4 %c_1_0 %c_1_0 %c_1_0 %c_1_0
+		%52 = 	OpSelect %t_vec4 %49 %50 %51
+			OpReturnValue %52
+			OpFunctionEnd
+		%53 = 	OpTypeFunction %t_void 
+		%f_main = 	OpFunction %t_void None %53
+		%54 = 	OpLabel
+		%55 = 	OpTypePointer Function %t_VSInput
+		%56 = 	OpVariable %55 Function
+		%57 = 	OpLoad %t_VSInput %56
+		%58 = 	OpFunctionCall %t_VSOutput %f_VSMain %57
+		%59 = 	OpTypePointer Function %t_VSOutput
+		%60 = 	OpVariable %59 Function
+			OpStore %60 %58
+		%61 = 	OpLoad %t_VSOutput %60
+		%62 = 	OpFunctionCall %t_vec4 %f_PSMain %61
+			OpReturn
+			OpFunctionEnd
